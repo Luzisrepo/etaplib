@@ -1,0 +1,2 @@
+- Drag Uploads
+- Minimal text window when clicking a posted item that displays a maximized version of the current simple squared layout, with a comment section as a side bar on the right.
