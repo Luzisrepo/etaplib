@@ -1,0 +1,194 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  color-scheme: dark;
+
+  /* Gradient-theme flag — set to 1 by JS when a gradient theme is active */
+  --is-gradient: 0;
+
+  /* GitHub-brutalist palette — no blue washes, hard contrast */
+  --bg:       var(--bg);
+  --bg-2:     #161b22;
+  --bg-3:     #1c2128;
+  --bg-4:     #21262d;
+  --border:   #30363d;
+  --border-2: #444c56;
+  --fg:       #e6edf3;
+  --fg-2:     #8b949e;
+  --fg-3:     #484f58;
+  --accent:   var(--accent);
+  --accent-2: #1f6feb;
+  --accent-bg:#1f2d45;
+  --green:    #3fb950;
+  --green-bg: #1a2d1a;
+  --red:      #f85149;
+  --red-bg:   #2a1515;
+  --amber:    #d29922;
+  --amber-bg: #2a2215;
+  --purple:   #a371f7;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; }
+
+html {
+  scroll-behavior: smooth;
+  font-size: 15px;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body, 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  line-height: 1.5;
+  letter-spacing: -0.006em;
+}
+
+/* ── Gradient theme: animated body background ── */
+body.gradient-active {
+  background-size: 400% 400% !important;
+  animation: gradient-shift 15s ease infinite;
+}
+
+button, input, textarea, select { font: inherit; outline: none; }
+
+::selection {
+  background: rgba(47,129,247,0.35);
+  color: var(--fg);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-2); }
+
+/* ── Focus ── */
+.focus-ring {
+  @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg)];
+}
+
+/* ── Animations ── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slide-right {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.97) translateY(3px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+@keyframes pulse-border {
+  0%, 100% { border-color: var(--border); }
+  50%       { border-color: var(--accent); }
+}
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.anim-fade-up   { animation: fade-up  0.2s cubic-bezier(0.16,1,0.3,1) both; }
+.anim-fade-in   { animation: fade-in  0.15s ease both; }
+.anim-scale-in  { animation: scale-in 0.2s cubic-bezier(0.16,1,0.3,1) both; }
+.anim-slide-right { animation: slide-right 0.2s cubic-bezier(0.16,1,0.3,1) both; }
+.anim-slide-down { animation: slide-down 0.15s cubic-bezier(0.16,1,0.3,1) both; }
+
+/* ── Skeleton ── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bg-2) 25%,
+    var(--bg-3) 50%,
+    var(--bg-2) 75%
+  );
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+/* ── Mono font utility ── */
+.mono { font-family: 'IBM Plex Mono', 'SF Mono', monospace; }
+
+/* ── Sidebar backdrop ── */
+.backdrop {
+  background: rgba(1, 4, 9, 0.75);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* ── Card press effect ── */
+.press {
+  transition: transform 80ms ease, box-shadow 80ms ease;
+}
+.press:active { transform: scale(0.985); }
+
+/* ── Button active press ── */
+button.press-sm:active { transform: scale(0.96); }
+
+/* ── Scan line subtle texture ── */
+.scanlines::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255,255,255,0.015) 2px,
+    rgba(255,255,255,0.015) 4px
+  );
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* ── Dot grid bg ── */
+.dot-grid {
+  background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ── Avatar ── */
+.avatar-ring {
+  box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 3px var(--border);
+}
+
+/* ── Gradient-aware panel backgrounds ── */
+/* When a gradient theme is active these swap solid bgs for semi-transparent
+   ones so the animated body gradient bleeds through every panel. */
+.gradient-active .gp-sidebar {
+  background: rgba(0, 0, 0, 0.55) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.gradient-active .gp-topbar {
+  background: rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.gradient-active .gp-main {
+  background: transparent !important;
+}
