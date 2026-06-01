@@ -44,15 +44,82 @@ export function formatRelativeDate(date: string) {
   return formatDate(date);
 }
 
-export function parseTags(value: string) {
+// ── Tag limits ────────────────────────────────────────────────────────────────
+export const TAG_MAX_CHARS   = 30;   // max characters per individual tag
+export const TAG_MAX_COUNT   = 20;   // max number of tags
+
+// ── Portuguese swear / slur filter ───────────────────────────────────────────
+// Normalise accented chars so bypass attempts (e.g. "f0da" → "foda") are caught.
+function normaliseForFilter(s: string) {
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[0@]/g, "o")
+    .replace(/[1!|]/g, "i")
+    .replace(/[3]/g, "e")
+    .replace(/[4]/g, "a")
+    .replace(/[5]/g, "s")
+    .toLowerCase();
+}
+
+const PT_BLOCKED_PATTERNS: RegExp[] = [
+  // palavrões sexuais
+  /\bfod[ae]?\b/, /\bfoder\b/, /\bfodass[e]?\b/,
+  /\bpica\b/, /\bpicas\b/, /\bporra\b/, /\bcaralho\b/,
+  /\bputa\b/, /\bputas\b/, /\bputo\b/,
+  /\bcu\b/, /\bcus\b/, /\bculhao\b/, /\bculhoes\b/,
+  /\bsexo\b/, /\bsex\b/,
+  /\bviado\b/, /\bviadao\b/,
+  /\bvagabunda\b/, /\bvagabundo\b/,
+  /\bprostitu[it]a\b/,
+  // insultos / slurs étnicos e sociais
+  /\bpret[ao]\b/, /\bnigger\b/, /\bnig\b/, /\bnegrao\b/,
+  /\bjudeu\b/,    // por vezes usado como insulto
+  /\bciganice\b/, /\bcigano\b/,
+  /\bfilhod[ae]puta\b/, /\bfdp\b/,
+  /\bbosta\b/, /\bmerda\b/, /\bmijar\b/, /\bpiss\b/,
+  /\bburro\b/, /\bburra\b/, /\bidiota\b/, /\bcretino\b/,
+  /\bbabaca\b/, /\bimbecel\b/, /\bimbecil\b/,
+  // inglês vulgar comum em PT
+  /\bfuck\b/, /\bfucker\b/, /\bshit\b/, /\bbitch\b/,
+  /\basshole\b/, /\bbastard\b/, /\bdick\b/, /\bcunt\b/,
+  /\bnigga\b/, /\bkike\b/, /\bspic\b/, /\bfaggot\b/,
+];
+
+function containsBlockedWord(tag: string): boolean {
+  const n = normaliseForFilter(tag);
+  return PT_BLOCKED_PATTERNS.some((re) => re.test(n));
+}
+
+export function parseTags(value: string): string[] {
   return Array.from(
     new Set(
       value
         .split(",")
         .map((tag) => tag.trim().toLowerCase())
         .filter(Boolean)
+        .filter((tag) => tag.length <= TAG_MAX_CHARS)
+        .filter((tag) => !containsBlockedWord(tag))
     )
-  ).slice(0, 20);
+  ).slice(0, TAG_MAX_COUNT);
+}
+
+/** Returns the first blocked tag found in the raw comma-separated input, or null if clean. */
+export function findBlockedTag(value: string): string | null {
+  const candidates = value
+    .split(",")
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean);
+  return candidates.find(containsBlockedWord) ?? null;
+}
+
+/** Returns the first blocked word found in free-form text (e.g. descriptions), or null if clean. */
+export function findBlockedWordInText(text: string): string | null {
+  const words = text
+    .split(/[\s,;.!?()\[\]{}"'\-\/\\]+/)
+    .map((w) => w.trim().toLowerCase())
+    .filter(Boolean);
+  return words.find(containsBlockedWord) ?? null;
 }
 
 export function tagsToInput(tags: string[]) {

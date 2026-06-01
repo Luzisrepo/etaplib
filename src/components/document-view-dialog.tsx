@@ -360,7 +360,7 @@ export function DocumentViewDialog({
           {document.description ? (
             <div className="space-y-2">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--fg-3)]">Descrição e Notas</h3>
-              <div className="rounded-lg border border-[var(--border)] bg-[var(--bg)] p-4 max-h-64 overflow-y-auto text-left shadow-inner">
+              <div className="preview-scroll rounded-lg border border-[var(--border)] bg-[var(--bg)] p-4 max-h-64 overflow-y-auto text-left shadow-inner">
                 {renderDiscordFormat(document.description)}
               </div>
             </div>
