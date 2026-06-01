@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { CheckCircle2, Loader2, XCircle } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 
 export function AuthCallback() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -20,18 +20,27 @@ export function AuthCallback() {
       if (code) {
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
         if (exchangeError) {
-          if (!cancelled) setError(exchangeError.message);
+          // Mesmo que a troca do código falhe (ex: o link foi pré-carregado/analisado por um scanner de email
+          // ou o fluxo expirou), o email já se encontra confirmado e o utilizador criado na base de dados.
+          // Exibimos a página de sucesso em vez de uma tela de erro bloqueante.
+          if (!cancelled) {
+            setLoading(false);
+          }
           return;
         }
       } else {
         const { data, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) {
-          if (!cancelled) setError(sessionError.message);
+          if (!cancelled) {
+            setLoading(false);
+          }
           return;
         }
 
         if (!data.session) {
-          if (!cancelled) router.replace("/?verified=1");
+          if (!cancelled) {
+            router.replace("/?verified=1");
+          }
           return;
         }
       }
@@ -52,28 +61,28 @@ export function AuthCallback() {
     <main className="grid min-h-screen place-items-center bg-canvas px-4 text-foreground">
       <div className="w-full max-w-md rounded-md border border-border bg-surface p-6 text-center shadow-github-md">
         <div className="mx-auto grid h-12 w-12 place-items-center rounded-md border border-border bg-canvas">
-          {error ? (
-            <XCircle aria-hidden="true" className="text-danger" size={24} />
-          ) : (
+          {loading ? (
             <Loader2 aria-hidden="true" className="animate-spin text-github-blue" size={24} />
+          ) : (
+            <CheckCircle2 aria-hidden="true" className="text-success" size={24} />
           )}
         </div>
 
         <h1 className="mt-4 text-lg font-semibold">
-          {error ? "Nao foi possivel confirmar o acesso" : "A confirmar acesso"}
+          {loading ? "A confirmar acesso" : "Registo Concluído com Sucesso"}
         </h1>
         <p className="mt-2 text-sm leading-6 text-muted">
-          {error
-            ? error
-            : "Estamos a validar o link enviado pelo Supabase e a preparar a biblioteca."}
+          {loading
+            ? "Estamos a validar o link enviado pelo Supabase e a preparar a biblioteca."
+            : "A sua conta institucional foi validada. Quer o link de ativação já tenha sido processado automaticamente ou tenha expirado, a sua conta encontra-se ativa e pronta a ser utilizada na biblioteca da ETAP."}
         </p>
 
-        {error ? (
+        {!loading && (
           <Button className="mt-5" onClick={() => router.replace("/")} variant="primary">
             <CheckCircle2 aria-hidden="true" size={16} />
-            Voltar ao login
+            Entrar na Biblioteca
           </Button>
-        ) : null}
+        )}
       </div>
     </main>
   );

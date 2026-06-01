@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { FileUp, X } from "lucide-react";
+import { FileUp, Upload, X } from "lucide-react";
 import { DocumentCard } from "@/components/document-card";
+import { DocumentViewDialog } from "@/components/document-view-dialog";
 import { EditDocumentDialog } from "@/components/edit-document-dialog";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
@@ -31,6 +32,9 @@ export function Dashboard({ session }: { session: Session }) {
   const [sidebarOpen, setSidebarOpen]   = useState(false);
   const [profileOpen, setProfileOpen]   = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [isWindowDragging, setIsWindowDragging] = useState(false);
+  const [draggedFile, setDraggedFile] = useState<File | null>(null);
+  const [maximizedDoc, setMaximizedDoc] = useState<LibraryDocument | null>(null);
 
 
   const loadData = useCallback(async (silent = false) => {
@@ -54,6 +58,52 @@ export function Dashboard({ session }: { session: Session }) {
   }, [session.user.id]);
 
   useEffect(() => { void loadData(); }, [loadData]);
+
+  // Listen for global window drag-and-drop events
+  useEffect(() => {
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.dataTransfer?.types.includes("Files")) {
+        setIsWindowDragging(true);
+      }
+    };
+
+    const handleDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (
+        e.clientX <= 0 ||
+        e.clientY <= 0 ||
+        e.clientX >= window.innerWidth ||
+        e.clientY >= window.innerHeight
+      ) {
+        setIsWindowDragging(false);
+      }
+    };
+
+    const handleDrop = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsWindowDragging(false);
+
+      const files = e.dataTransfer?.files;
+      if (files && files.length > 0) {
+        setDraggedFile(files[0]);
+        setUploadOpen(true);
+      }
+    };
+
+    window.addEventListener("dragover", handleDragOver);
+    window.addEventListener("dragleave", handleDragLeave);
+    window.addEventListener("drop", handleDrop);
+
+    return () => {
+      window.removeEventListener("dragover", handleDragOver);
+      window.removeEventListener("dragleave", handleDragLeave);
+      window.removeEventListener("drop", handleDrop);
+    };
+  }, []);
 
   const silentRefresh = useCallback(() => loadData(true), [loadData]);
   const handleDelete  = useCallback((id: string) => setDocuments(p => p.filter(d => d.id !== id)), []);
@@ -164,6 +214,7 @@ export function Dashboard({ session }: { session: Session }) {
                     onUpdated={handleUpdated}
                     onEdit={() => setEditing(doc)}
                     onRefresh={silentRefresh}
+                    onSelect={() => setMaximizedDoc(doc)}
                   />
                 </div>
               ))}
@@ -190,10 +241,11 @@ export function Dashboard({ session }: { session: Session }) {
 
       <UploadDialog
         categories={categories}
-        onClose={() => setUploadOpen(false)}
+        onClose={() => { setUploadOpen(false); setDraggedFile(null); }}
         onUploaded={silentRefresh}
         open={uploadOpen}
         session={session}
+        initialFile={draggedFile}
       />
       <EditDocumentDialog
         categories={categories}
@@ -201,6 +253,33 @@ export function Dashboard({ session }: { session: Session }) {
         onClose={() => setEditing(null)}
         onSaved={u => { handleUpdated(u); setEditing(null); }}
       />
+      <DocumentViewDialog
+        document={maximizedDoc}
+        open={maximizedDoc !== null}
+        onClose={() => setMaximizedDoc(null)}
+        isOwner={maximizedDoc ? maximizedDoc.owner_id === session.user.id : false}
+        onEdit={() => { if (maximizedDoc) { setEditing(maximizedDoc); setMaximizedDoc(null); } }}
+        onDeleted={(id) => { handleDelete(id); setMaximizedDoc(null); }}
+        onUpdated={(doc) => { handleUpdated(doc); setMaximizedDoc(doc); }}
+        onRefresh={silentRefresh}
+      />
+      {/* Global Drag and Drop Overlay */}
+      {isWindowDragging && (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/80 p-6 text-center backdrop-blur-md anim-fade-in pointer-events-none">
+          <div className="flex max-w-md flex-col items-center gap-4 rounded-2xl border-2 border-dashed border-[var(--accent)] bg-[var(--bg-2)]/80 px-8 py-12 shadow-2xl dot-grid">
+            <div className="grid h-16 w-16 place-items-center rounded-2xl border border-[var(--accent)] bg-[var(--bg)] text-[var(--accent)] shadow-lg animate-bounce">
+              <Upload size={32} />
+            </div>
+            <h2 className="text-xl font-bold text-[var(--fg)]">Largar para Enviar</h2>
+            <p className="text-sm text-[var(--fg-2)] leading-relaxed">
+              Solte o seu ficheiro em qualquer parte do ecrã para iniciar o carregamento automático imediato!
+            </p>
+            <span className="mono text-[10px] uppercase tracking-wider text-[var(--fg-3)]">
+              limite regulamentar de 500 MB
+            </span>
+          </div>
+        </div>
+      )}
       {profile && (
         <ProfileEditorDialog
           open={profileOpen}

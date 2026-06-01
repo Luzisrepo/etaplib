@@ -17,9 +17,10 @@ type Props = {
   onUpdated: (doc: LibraryDocument) => void;
   onEdit: () => void;
   onRefresh: () => void;
+  onSelect?: () => void;
 };
 
-export function DocumentCard({ document, isOwner, onDeleted, onEdit }: Props) {
+export function DocumentCard({ document, isOwner, onDeleted, onEdit, onSelect }: Props) {
   const [busy, setBusy] = useState<"view" | "dl" | "del" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmDel, setConfirmDel] = useState(false);
@@ -57,8 +58,13 @@ export function DocumentCard({ document, isOwner, onDeleted, onEdit }: Props) {
   return (
     <article
       ref={cardRef}
+      onClick={(e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest("button") || target.closest(".cursor-default")) return;
+        onSelect?.();
+      }}
       className={cn(
-        "group relative overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-2)] transition-all duration-150",
+        "group relative overflow-hidden rounded-lg border border-[var(--border)] bg-[var(--bg-2)] transition-all duration-150 cursor-pointer",
         "hover:border-[var(--border-2)] hover:bg-[var(--bg-3)] hover:shadow-md",
         exiting && "opacity-0 scale-[0.98] pointer-events-none",
         busy === "del" && "opacity-40 pointer-events-none",

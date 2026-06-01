@@ -12,9 +12,16 @@ import { cn, formatBytes, parseTags, safeFileName } from "@/lib/utils";
 
 const MAX = 500 * 1024 * 1024;
 
-type Props = { categories: Category[]; onClose: () => void; onUploaded: () => void; open: boolean; session: Session; };
+type Props = {
+  categories: Category[];
+  onClose: () => void;
+  onUploaded: () => void;
+  open: boolean;
+  session: Session;
+  initialFile?: File | null;
+};
 
-export function UploadDialog({ categories, onClose, onUploaded, open, session }: Props) {
+export function UploadDialog({ categories, onClose, onUploaded, open, session, initialFile }: Props) {
   const [file, setFile]           = useState<File | null>(null);
   const [title, setTitle]         = useState("");
   const [description, setDesc]    = useState("");
@@ -30,6 +37,21 @@ export function UploadDialog({ categories, onClose, onUploaded, open, session }:
   useEffect(() => {
     if (!open) { setError(null); setProgress(0); setDone(false); setFile(null); setTitle(""); setDesc(""); setCat(""); setTags(""); }
   }, [open]);
+
+  // Handle initialFile automatic upload trigger
+  useEffect(() => {
+    if (open && initialFile) {
+      setFile(initialFile);
+      const cleanTitle = initialFile.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
+      setTitle(cleanTitle);
+      
+      // Delay slightly to ensure state is set, then start upload
+      const t = setTimeout(() => {
+        void doUpload(initialFile, cleanTitle);
+      }, 100);
+      return () => clearTimeout(t);
+    }
+  }, [open, initialFile]);
 
   // Close on Escape
   useEffect(() => {
@@ -47,18 +69,16 @@ export function UploadDialog({ categories, onClose, onUploaded, open, session }:
     if (!title.trim()) setTitle(f.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "));
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!file) { setError("Seleciona um ficheiro."); return; }
-    if (file.size > MAX) { setError(`Ficheiro excede ${formatBytes(MAX)}.`); return; }
+  async function doUpload(targetFile: File, customTitle: string) {
+    if (targetFile.size > MAX) { setError(`Ficheiro excede ${formatBytes(MAX)}.`); return; }
     setError(null);
     setLoading(true);
     setProgress(5);
 
-    const path = `${session.user.id}/${Date.now()}-${safeFileName(file.name)}`;
-    const mime = file.type || "application/octet-stream";
+    const path = `${session.user.id}/${Date.now()}-${safeFileName(targetFile.name)}`;
+    const mime = targetFile.type || "application/octet-stream";
 
-    const { error: ue } = await supabase.storage.from("biblioteca").upload(path, file, {
+    const { error: ue } = await supabase.storage.from("biblioteca").upload(path, targetFile, {
       cacheControl: "3600", contentType: mime, upsert: false,
     });
     setProgress(70);
@@ -67,16 +87,22 @@ export function UploadDialog({ categories, onClose, onUploaded, open, session }:
     const { error: ie } = await supabase.from("documents").insert({
       category_id: categoryId || null,
       description: description.trim() || null,
-      file_name: file.name, file_path: path, file_size: file.size, mime_type: mime,
+      file_name: targetFile.name, file_path: path, file_size: targetFile.size, mime_type: mime,
       owner_id: session.user.id,
       tags: parseTags(tagsInput),
-      title: title.trim() || file.name,
+      title: customTitle.trim() || targetFile.name,
     });
     setProgress(100);
     if (ie) { await supabase.storage.from("biblioteca").remove([path]); setLoading(false); setProgress(0); setError(ie.message); return; }
 
     setDone(true);
     setTimeout(() => { onUploaded(); onClose(); }, 900);
+  }
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!file) { setError("Seleciona um ficheiro."); return; }
+    await doUpload(file, title || file.name);
   }
 
   return (
