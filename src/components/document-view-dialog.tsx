@@ -138,6 +138,8 @@ export function DocumentViewDialog({
   const [busy, setBusy] = useState<"view" | "dl" | "del" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmDel, setConfirmDel] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
 
   // Close on Escape
   useEffect(() => {
@@ -146,6 +148,57 @@ export function DocumentViewDialog({
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
   }, [open, busy, onClose]);
+
+  // Load preview URL dynamically
+  useEffect(() => {
+    if (!open || !document) {
+      setPreviewUrl(null);
+      setLoadingPreview(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadPreview() {
+      if (!document) return;
+      const mime = document.mime_type.toLowerCase();
+      const name = document.file_name.toLowerCase();
+      const isPreviewable =
+        mime.startsWith("image/") ||
+        mime.startsWith("video/") ||
+        mime.includes("pdf") ||
+        name.endsWith(".pdf") ||
+        mime.startsWith("text/") ||
+        name.endsWith(".txt") ||
+        name.endsWith(".md") ||
+        name.endsWith(".json");
+
+      if (!isPreviewable) return;
+
+      setLoadingPreview(true);
+      const { data, error: e } = await supabase.storage
+        .from("biblioteca")
+        .createSignedUrl(document.file_path, 300);
+
+      if (cancelled) return;
+      setLoadingPreview(false);
+
+      if (e) {
+        console.error("Erro ao carregar pré-visualização:", e.message);
+        return;
+      }
+
+      if (data?.signedUrl) {
+        setPreviewUrl(data.signedUrl);
+      }
+    }
+
+    void loadPreview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, document]);
 
   if (!open || !document) return null;
 
@@ -258,6 +311,50 @@ export function DocumentViewDialog({
               </div>
             </div>
           </div>
+
+          {/* File Preview Panel */}
+          {loadingPreview && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--fg-3)]">Pré-visualização</h3>
+              <div className="flex flex-col items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg)]/40 p-10 h-64 text-center">
+                <Loader2 size={24} className="animate-spin text-[var(--accent)] mb-2" />
+                <p className="text-xs text-[var(--fg-3)] mono">A carregar pré-visualização segura…</p>
+              </div>
+            </div>
+          )}
+
+          {!loadingPreview && previewUrl && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--fg-3)]">Pré-visualização</h3>
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--bg)] overflow-hidden flex items-center justify-center p-1 shadow-inner min-h-[200px] max-h-[360px]">
+                {document.mime_type.toLowerCase().startsWith("image/") ? (
+                  <img
+                    src={previewUrl}
+                    alt={document.title}
+                    className="max-h-[340px] max-w-full object-contain rounded p-1"
+                  />
+                ) : document.mime_type.toLowerCase().startsWith("video/") ? (
+                  <video
+                    src={previewUrl}
+                    controls
+                    className="max-h-[340px] max-w-full rounded"
+                  />
+                ) : document.mime_type.toLowerCase().includes("pdf") || document.file_name.toLowerCase().endsWith(".pdf") ? (
+                  <iframe
+                    src={`${previewUrl}#toolbar=0`}
+                    className="w-full h-[340px] rounded border-0"
+                    title="PDF Preview"
+                  />
+                ) : (
+                  <iframe
+                    src={previewUrl}
+                    className="w-full h-[300px] rounded border-0 bg-[var(--bg-2)]/60 text-[var(--fg)] p-2 font-mono text-[11px]"
+                    title="Text Preview"
+                  />
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Formatted Description Panel */}
           {document.description ? (
