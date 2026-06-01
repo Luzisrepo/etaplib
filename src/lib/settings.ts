@@ -8,11 +8,21 @@ export type ThemeId =
   | "ruby"
   | "emerald"
   | "white"
+  // ── New standard themes
+  | "slate"
+  | "amber"
+  | "rose-quartz"
+  | "obsidian"
   // ── Experimental gradient themes
   | "aurora"
   | "dusk"
   | "synthwave"
-  | "prism";
+  | "prism"
+  // ── New gradient themes
+  | "nebula"
+  | "inferno"
+  | "arctic"
+  | "venom";
 
 export type FontId =
   | "inter"
@@ -388,6 +398,241 @@ export const THEMES: ThemeDef[] = [
       "--purple":    "#c084fc",
     },
   },
+
+  // ── New standard themes ──────────────────────────────────────────────────────
+  {
+    id: "slate",
+    label: "Slate",
+    description: "Cool blue-grey professional",
+    swatch: "#94a3b8",
+    bgSwatch: "#0b0e14",
+    vars: {
+      "--bg":       "#0b0e14",
+      "--bg-2":     "#111520",
+      "--bg-3":     "#171c29",
+      "--bg-4":     "#1d2333",
+      "--border":   "#252d3f",
+      "--border-2": "#313d55",
+      "--fg":       "#e2e8f0",
+      "--fg-2":     "#94a3b8",
+      "--fg-3":     "#475569",
+      "--accent":   "#7c8ef7",
+      "--accent-2": "#5a6de0",
+      "--accent-bg":"#131726",
+      "--green":    "#22d3a5",
+      "--green-bg": "#071a14",
+      "--red":      "#f87171",
+      "--red-bg":   "#200a0a",
+      "--amber":    "#fbbf24",
+      "--amber-bg": "#201800",
+      "--purple":   "#c084fc",
+    },
+  },
+  {
+    id: "amber",
+    label: "Amber",
+    description: "Warm gold on charcoal",
+    swatch: "#f59e0b",
+    bgSwatch: "#0f0d07",
+    vars: {
+      "--bg":       "#0f0d07",
+      "--bg-2":     "#1a170a",
+      "--bg-3":     "#221f0e",
+      "--bg-4":     "#2a2712",
+      "--border":   "#3d3515",
+      "--border-2": "#54491e",
+      "--fg":       "#fef9e7",
+      "--fg-2":     "#c8a840",
+      "--fg-3":     "#6b5820",
+      "--accent":   "#f59e0b",
+      "--accent-2": "#d97706",
+      "--accent-bg":"#2a1e04",
+      "--green":    "#4ade80",
+      "--green-bg": "#0f2a16",
+      "--red":      "#f87171",
+      "--red-bg":   "#2a0f0f",
+      "--amber":    "#f59e0b",
+      "--amber-bg": "#2a1e04",
+      "--purple":   "#c084fc",
+    },
+  },
+  {
+    id: "rose-quartz",
+    label: "Rose Quartz",
+    description: "Dusty pink, soft contrast",
+    swatch: "#fb7185",
+    bgSwatch: "#110810",
+    vars: {
+      "--bg":       "#110810",
+      "--bg-2":     "#1c101a",
+      "--bg-3":     "#251521",
+      "--bg-4":     "#2e1a28",
+      "--border":   "#44203a",
+      "--border-2": "#5c2a4e",
+      "--fg":       "#fce7f3",
+      "--fg-2":     "#f9a8d4",
+      "--fg-3":     "#8b4a6e",
+      "--accent":   "#fb7185",
+      "--accent-2": "#f43f5e",
+      "--accent-bg":"#35091e",
+      "--green":    "#86efac",
+      "--green-bg": "#0f2a1a",
+      "--red":      "#fca5a5",
+      "--red-bg":   "#2a0f14",
+      "--amber":    "#fcd34d",
+      "--amber-bg": "#2a1e08",
+      "--purple":   "#d8b4fe",
+    },
+  },
+  {
+    id: "obsidian",
+    label: "Obsidian",
+    description: "Pure black, copper accents",
+    swatch: "#e07b39",
+    bgSwatch: "#050505",
+    vars: {
+      "--bg":       "#050505",
+      "--bg-2":     "#0c0c0c",
+      "--bg-3":     "#141414",
+      "--bg-4":     "#1c1c1c",
+      "--border":   "#282520",
+      "--border-2": "#3a3530",
+      "--fg":       "#f5f0eb",
+      "--fg-2":     "#c8a882",
+      "--fg-3":     "#5a4a38",
+      "--accent":   "#e07b39",
+      "--accent-2": "#c4622a",
+      "--accent-bg":"#241508",
+      "--green":    "#6ee7b7",
+      "--green-bg": "#0d1e18",
+      "--red":      "#fca5a5",
+      "--red-bg":   "#1e0808",
+      "--amber":    "#fde68a",
+      "--amber-bg": "#1e1808",
+      "--purple":   "#c4b5fd",
+    },
+  },
+  // ── New experimental gradient themes ─────────────────────────────────────────
+  {
+    id: "nebula",
+    label: "Nebula",
+    description: "Deep space: violet, teal, magenta",
+    swatch: "#e879f9",
+    bgSwatch: "#04010f",
+    experimental: true,
+    bodyGradient: "radial-gradient(ellipse at 20% 30%, #1a0535 0%, transparent 55%), radial-gradient(ellipse at 80% 70%, #03203a 0%, transparent 55%), radial-gradient(ellipse at 50% 90%, #200830 0%, transparent 50%), #04010f",
+    vars: {
+      "--bg":        "#04010f",
+      "--bg-2":      "#0b0520",
+      "--bg-3":      "#110a2a",
+      "--bg-4":      "#170f34",
+      "--border":    "#28155a",
+      "--border-2":  "#3a1f7a",
+      "--fg":        "#f0e8ff",
+      "--fg-2":      "#c084fc",
+      "--fg-3":      "#6633aa",
+      "--accent":    "#e879f9",
+      "--accent-2":  "#a855f7",
+      "--accent-bg": "#1e063a",
+      "--green":     "#2dd4bf",
+      "--green-bg":  "#031e1c",
+      "--red":       "#f87171",
+      "--red-bg":    "#280808",
+      "--amber":     "#fbbf24",
+      "--amber-bg":  "#281c04",
+      "--purple":    "#f0abfc",
+    },
+  },
+  {
+    id: "inferno",
+    label: "Inferno",
+    description: "Volcanic fire: ember, lava, ash",
+    swatch: "#ff4500",
+    bgSwatch: "#080200",
+    experimental: true,
+    bodyGradient: "radial-gradient(ellipse at 0% 100%, #2a0800 0%, transparent 60%), radial-gradient(ellipse at 100% 0%, #1a0400 0%, transparent 60%), radial-gradient(ellipse at 50% 50%, #120100 0%, transparent 70%), #080200",
+    vars: {
+      "--bg":        "#080200",
+      "--bg-2":      "#130500",
+      "--bg-3":      "#1e0900",
+      "--bg-4":      "#280d00",
+      "--border":    "#4a1500",
+      "--border-2":  "#6b2000",
+      "--fg":        "#fff1e6",
+      "--fg-2":      "#ff9966",
+      "--fg-3":      "#8b3500",
+      "--accent":    "#ff4500",
+      "--accent-2":  "#e63200",
+      "--accent-bg": "#2a0a00",
+      "--green":     "#22c55e",
+      "--green-bg":  "#0a1e08",
+      "--red":       "#ff6b6b",
+      "--red-bg":    "#2a0a0a",
+      "--amber":     "#ffa500",
+      "--amber-bg":  "#2a1500",
+      "--purple":    "#d97706",
+    },
+  },
+  {
+    id: "arctic",
+    label: "Arctic",
+    description: "Glacial blue-white: ice, snow, aurora",
+    swatch: "#67e8f9",
+    bgSwatch: "#010a12",
+    experimental: true,
+    bodyGradient: "radial-gradient(ellipse at 30% 20%, #002a4a 0%, transparent 55%), radial-gradient(ellipse at 70% 80%, #001e36 0%, transparent 55%), radial-gradient(ellipse at 50% 50%, #000d1a 0%, transparent 60%), #010a12",
+    vars: {
+      "--bg":        "#010a12",
+      "--bg-2":      "#041520",
+      "--bg-3":      "#07202e",
+      "--bg-4":      "#0a2a3c",
+      "--border":    "#0e3a52",
+      "--border-2":  "#155070",
+      "--fg":        "#e8f8ff",
+      "--fg-2":      "#67e8f9",
+      "--fg-3":      "#2a7a99",
+      "--accent":    "#22d3ee",
+      "--accent-2":  "#06b6d4",
+      "--accent-bg": "#021e2a",
+      "--green":     "#a7f3d0",
+      "--green-bg":  "#041e14",
+      "--red":       "#fca5a5",
+      "--red-bg":    "#200a0a",
+      "--amber":     "#fde68a",
+      "--amber-bg":  "#201a04",
+      "--purple":    "#c7d2fe",
+    },
+  },
+  {
+    id: "venom",
+    label: "Venom",
+    description: "Toxic green on pitch black",
+    swatch: "#39ff14",
+    bgSwatch: "#010501",
+    experimental: true,
+    bodyGradient: "radial-gradient(ellipse at 10% 90%, #001a00 0%, transparent 55%), radial-gradient(ellipse at 90% 10%, #001500 0%, transparent 55%), radial-gradient(ellipse at 50% 50%, #020a02 0%, transparent 65%), #010501",
+    vars: {
+      "--bg":        "#010501",
+      "--bg-2":      "#040d04",
+      "--bg-3":      "#071507",
+      "--bg-4":      "#0a1e0a",
+      "--border":    "#0f3010",
+      "--border-2":  "#154518",
+      "--fg":        "#e8ffe8",
+      "--fg-2":      "#39ff14",
+      "--fg-3":      "#1a6618",
+      "--accent":    "#39ff14",
+      "--accent-2":  "#22cc00",
+      "--accent-bg": "#061506",
+      "--green":     "#39ff14",
+      "--green-bg":  "#041404",
+      "--red":       "#ff4444",
+      "--red-bg":    "#200808",
+      "--amber":     "#ccff00",
+      "--amber-bg":  "#1a1e04",
+      "--purple":    "#00ff88",
+    },
+  },
 ];
 
 // ── Font definitions ─────────────────────────────────────────────────────────
@@ -487,6 +732,14 @@ export function applySettings(s: AppSettings): void {
   // semi-transparent backgrounds that let the gradient bleed through.
   document.body.classList.toggle("gradient-active", isGradient);
   root.style.setProperty("--is-gradient", isGradient ? "1" : "0");
+
+  // Apply per-theme class so CSS can target specific gradient animations.
+  // Remove any previous theme-* classes first.
+  document.body.className = document.body.className
+    .split(" ")
+    .filter((c) => !c.startsWith("theme-"))
+    .join(" ");
+  document.body.classList.add(`theme-${theme.id}`);
 
   // Apply font
   root.style.setProperty("--font-body", `'${font.cssFamily}', ${font.fallback}`);
