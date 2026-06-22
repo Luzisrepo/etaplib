@@ -7,7 +7,7 @@ import { translations, type TranslationKey } from "./translations";
 interface LanguageContextProps {
   language: "pt" | "en";
   setLanguage: (lang: "pt" | "en") => void;
-  t: (key: TranslationKey, params?: Record<string, string>) => string;
+  t: (key: TranslationKey, params?: Record<string, string | number>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
@@ -29,7 +29,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     saveSettings(updated);
   }
 
-  function t(key: TranslationKey, params?: Record<string, string>): string {
+  function t(key: TranslationKey, params?: Record<string, string | number>): string {
     const langDict = translations[language] || translations.pt;
     const value = langDict[key];
     if (value === undefined) {
@@ -41,7 +41,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return interpolate(value, params);
   }
 
-  function interpolate(text: string, params?: Record<string, string>): string {
+  function interpolate(text: string, params?: Record<string, string | number>): string {
     if (!params) return text;
     let result = text;
     for (const [k, v] of Object.entries(params)) {
