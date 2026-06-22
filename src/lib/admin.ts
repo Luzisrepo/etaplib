@@ -87,7 +87,22 @@ export async function fetchInvites(): Promise<Invite[]> {
     .select("email, role, granted_by, granted_at, granted_by_profile:profiles!invites_granted_by_fkey(email, full_name)")
     .order("granted_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as Invite[];
+  // The join returns `granted_by_profile` as an array; flatten to the first row.
+  return ((data ?? []) as Array<{
+    email: string;
+    role: Role;
+    granted_by: string;
+    granted_at: string;
+    granted_by_profile: { email: string; full_name: string | null }[] | null;
+  }>).map((inv) => ({
+    email: inv.email,
+    role: inv.role,
+    granted_by: inv.granted_by,
+    granted_at: inv.granted_at,
+    granted_by_profile: inv.granted_by_profile?.[0]
+      ? { email: inv.granted_by_profile[0].email, full_name: inv.granted_by_profile[0].full_name ?? "" }
+      : null,
+  }));
 }
 
 /** Every document with its owner + category (admin oversight view). */
