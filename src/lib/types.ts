@@ -36,12 +36,12 @@ export type DocumentRow = {
 
 export type LibraryDocument = DocumentRow & {
   category: Category | null;
-  owner: Pick<Profile, "id" | "email" | "full_name" | "avatar_url"> | null;
+  owner: Pick<Profile, "id" | "email" | "full_name" | "avatar_url" | "role"> | null;
 };
 
 export type Invite = {
   email: string;
-  role: string;
+  role: Role;
   granted_by: string;
   granted_at: string;
   granted_by_profile: { email: string; full_name: string } | null;
