@@ -605,12 +605,25 @@
             <a href="#modulo-autenticacao" class="nav-link" style="padding-left:22px;font-size:0.8rem;">3.2 Autenticação</a>
             <a href="#modulo-dashboard" class="nav-link" style="padding-left:22px;font-size:0.8rem;">3.3 Dashboard</a>
             <a href="#modulo-documentos" class="nav-link" style="padding-left:22px;font-size:0.8rem;">3.4 Documentos</a>
-            <span class="nav-section-title">Segurança</span>
+            <a href="#modulo-perfil" class="nav-link" style="padding-left:22px;font-size:0.8rem;">3.5 Perfil e Avatar</a>
+            <span class="nav-section-title">Segurança &amp; Acessos</span>
             <a href="#persistencia-seguranca" class="nav-link">4. Persistência &amp; RLS</a>
+            <a href="#rbac-funcoes" class="nav-link">5. Funções e Administração</a>
+            <a href="#rbac-papeis" class="nav-link" style="padding-left:22px;font-size:0.8rem;">5.1 Papéis (RBAC)</a>
+            <a href="#rbac-painel" class="nav-link" style="padding-left:22px;font-size:0.8rem;">5.2 Painel de Administração</a>
+            <a href="#rbac-conceder" class="nav-link" style="padding-left:22px;font-size:0.8rem;">5.3 Conceder Acessos</a>
             <span class="nav-section-title">Customização</span>
-            <a href="#motor-estilos" class="nav-link">5. Motor de Estilos</a>
+            <a href="#motor-estilos" class="nav-link">6. Motor de Estilos</a>
+            <a href="#temas-arquitetura" class="nav-link" style="padding-left:22px;font-size:0.8rem;">6.1 Arquitetura de Variáveis</a>
+            <a href="#temas-catalogo" class="nav-link" style="padding-left:22px;font-size:0.8rem;">6.2 Catálogo de Temas</a>
+            <a href="#temas-aplicacao" class="nav-link" style="padding-left:22px;font-size:0.8rem;">6.3 Aplicação ao DOM</a>
+            <a href="#temas-gradientes" class="nav-link" style="padding-left:22px;font-size:0.8rem;">6.4 Gradientes Animados</a>
+            <a href="#temas-paineis" class="nav-link" style="padding-left:22px;font-size:0.8rem;">6.5 Painéis Transparentes</a>
+            <a href="#temas-fontes" class="nav-link" style="padding-left:22px;font-size:0.8rem;">6.6 Fontes e Tamanho</a>
+            <span class="nav-section-title">Internacionalização</span>
+            <a href="#i18n" class="nav-link">7. Idiomas (pt/en)</a>
             <span class="nav-section-title">Fluxo</span>
-            <a href="#fluxo-navegacao" class="nav-link">6. Fluxo de Navegação</a>
+            <a href="#fluxo-navegacao" class="nav-link">8. Fluxo de Navegação</a>
         </nav>
 
         <!-- Content -->
@@ -627,9 +640,10 @@
             <p>A <strong>ETAP Biblioteca</strong> é uma plataforma web orientada para a partilha, organização e centralização de recursos pedagógicos e materiais de estudo, tais como documentos em formato PDF, vídeos, apresentações e arquivos comprimidos.</p>
             <p>Os pilares fundamentais da plataforma incluem:</p>
             <ul>
-                <li><strong>Autenticação Institucional:</strong> O registo e início de sessão são restritos a utilizadores com endereços de correio eletrónico associados ao domínio institucional <code>@etap.pt</code>.</li>
-                <li><strong>Segurança de Autoria (Row Level Security - RLS):</strong> Garante-se que todos os utilizadores autenticados possam ler e descarregar os materiais, mas apenas o utilizador que efetuou o carregamento (dono do recurso) possui permissões para modificar ou eliminar os respetivos registos e ficheiros.</li>
-                <li><strong>Personalização de Interface Avançada:</strong> O sistema disponibiliza uma experiência altamente customizável através da alteração dinâmica de tipos de letra, dimensão do texto e aplicação de múltiplos temas visuais (incluindo temas com fundos gradientes animados).</li>
+                <li><strong>Autenticação Institucional:</strong> O registo e início de sessão são restritos a utilizadores com endereços de correio eletrónico associados ao domínio institucional <code>@etap.pt</code>, com possibilidade de conceder acesso pontual a emails externos.</li>
+                <li><strong>Segurança de Autoria (Row Level Security - RLS):</strong> Garante-se que todos os utilizadores autenticados possam ler e descarregar os materiais, mas apenas o utilizador que efetuou o carregamento (ou um utilizador com papel hierarquicamente superior — ver secção 5) possui permissões para modificar ou eliminar os respetivos registos.</li>
+                <li><strong>Controlo de Acessos por Funções (RBAC):</strong> Um sistema de papéis — <em>Membro</em>, <em>Professor</em> e <em>Administrador</em> — determina as capacidades de cada utilizador, com um painel de administração dedicado à gestão de utilizadores, convites e materiais.</li>
+                <li><strong>Personalização de Interface Avançada:</strong> O sistema disponibiliza uma experiência altamente customizável através de 17 temas visuais (incluindo temas com fundos gradientes animados), 5 famílias tipográficas, 4 dimensões de texto e dois idiomas (Português e Inglês).</li>
             </ul>
 
             <!-- Seção 2 -->
@@ -749,15 +763,34 @@
                 <ul>
                     <li><strong>Representação de Recursos:</strong> Expõe de forma estruturada os metadados de cada recurso físico guardado, incluindo o tipo de ficheiro, tamanho legível, data de registo e o autor que o partilhou.</li>
                     <li><strong>Segurança na Transferência:</strong> Realiza chamadas à API do Supabase Storage para obter links de acesso temporários e assinados para a leitura ou descarga dos recursos, impedindo a exposição pública e direta dos caminhos internos de armazenamento.</li>
-                    <li><strong>Controlo de Permissões Visual:</strong> Exibe os controlos de edição e remoção exclusivamente se o identificador do utilizador autenticado for correspondente ao do criador do registo.</li>
+                    <li><strong>Controlo de Permissões Visual:</strong> Exibe os controlos de edição e remoção exclusivamente se o identificador do utilizador autenticado for correspondente ao do criador do registo (ou se o utilizador tiver um papel elevado — ver secção 5).</li>
+                </ul>
+            </div>
+            <div class="glass-card">
+                <h4 style="margin-bottom:6px;color:var(--fg);"><code>document-view-dialog.tsx</code></h4>
+                <ul>
+                    <li><strong>Pré-visualização Incorporada:</strong> Permite abrir qualquer material num diálogo maximizável sem sair da aplicação. O tipo de pré-visualização é escolhido automaticamente em função do <em>MIME type</em>: imagens são renderizadas numa <code>&lt;img&gt;</code>, PDFs num <code>&lt;iframe&gt;</code> com a barra de ferramentas oculta, vídeos num <code>&lt;video&gt;</code> e restantes tipos mostram um ícone descritivo.</li>
+                    <li><strong>URLs Assinados de Curta Duração:</strong> Para cada visualização é gerado um <em>signed URL</em> através de <code>supabase.storage.from(...).createSignedUrl()</code> com validade de <strong>5 minutos</strong> para pré-visualização e <strong>2 minutos</strong> para descarga. Isto garante que, mesmo que o link seja partilhado, deixará rapidamente de funcionar.</li>
+                    <li><strong>Descarga Controlada:</strong> O modo de descarga (<code>mode === "dl"</code>) anexa o parâmetro <code>download: file_name</code>, forçando o navegador a guardar o ficheiro com o nome original em vez de o abrir inline.</li>
                 </ul>
             </div>
             <div class="glass-card">
                 <h4 style="margin-bottom:6px;color:var(--fg);"><code>upload-dialog.tsx</code></h4>
                 <ul>
-                    <li><strong>Carregamento de Novos Recursos:</strong> Gere o ciclo de envio de ficheiros para a infraestrutura do Supabase.</li>
-                    <li><strong>Área de Transferência:</strong> Fornece um painel de interação baseado em arrastamento com indicação de progresso de upload em tempo real (em formato percentual).</li>
-                    <li><strong>Validações do Lado do Cliente:</strong> Impede a submissão de ficheiros vazios ou que ultrapassem o limite regulamentar estipulado de <strong>500 Megabytes</strong> por ficheiro.</li>
+                    <li><strong>Carregamento de Novos Recursos:</strong> Gere o ciclo de envio de ficheiros para a infraestrutura do Supabase Storage e o respetivo registo na base de dados relacional.</li>
+                    <li><strong>Área de Transferência com Progresso:</strong> Fornece um painel de interação baseado em arrastamento (<em>drag-and-drop</em>) com indicação de progresso de upload em tempo real (em formato percentual).</li>
+                    <li><strong>Arrastamento ao Nível da Janela:</strong> Para além do diálogo, o <code>dashboard.tsx</code> regista ouvintes globais (<code>dragover</code>, <code>drop</code>) na <code>window</code>, de modo a que largar um ficheiro em qualquer parte do ecrã abra imediatamente o diálogo de upload pré-preenchido — com um <em>overlay</em> visual em ecrã inteiro a confirmar a zona de receção.</li>
+                    <li><strong>Validações do Lado do Cliente:</strong> Impede a submissão de ficheiros vazios ou que ultrapassem o limite regulamentar estipulado de <strong>500 Megabytes</strong> por ficheiro, e valida ainda nomes de tags e vocabulário sensível.</li>
+                </ul>
+            </div>
+
+            <h3 id="modulo-perfil">3.5 Módulo de Perfil e Avatar</h3>
+            <div class="glass-card">
+                <h4 style="margin-bottom:6px;color:var(--fg);"><code>profile-editor-dialog.tsx</code></h4>
+                <ul>
+                    <li><strong>Edição de Identidade:</strong> Permite ao utilizador definir o nome completo apresentado em todo o interface (substituindo o derivado do email quando presente).</li>
+                    <li><strong>Carregamento de Avatar:</strong> A imagem escolhida é enviada para o Supabase Storage numa pasta privada do próprio utilizador (<code>&lt;user_id&gt;/avatar-&lt;timestamp&gt;.&lt;ext&gt;</code>) com <code>upsert</code> ativo. O caminho resultante é guardado na coluna <code>avatar_url</code> da tabela <code>profiles</code>.</li>
+                    <li><strong>Pré-visualização Instantânea:</strong> Antes de gravar, o utilizador vê uma antevisão do avatar através de um <code>URL.createObjectURL()</code> local, evitando um pedido de rede prematuro. As iniciais (<code>getInitials</code>) continuam a ser usadas como <em>fallback</em> quando não existe imagem.</li>
                 </ul>
             </div>
 
@@ -792,12 +825,111 @@
                 <strong>🔐 Nota de Segurança:</strong> Este modelo descentralizado de controlo garante que as operações de escrita dependam exclusivamente da identidade validada pelo token de segurança gerado no ato de autenticação.
             </div>
 
-            <!-- Seção 5 -->
-            <h2 id="motor-estilos">5. Funcionamento do Motor de Estilos e Customização Dinâmica</h2>
-            <p>A aplicação recorre a um mapeamento dinâmico de variáveis CSS para aplicar os diversos temas estéticos.</p>
+            <!-- Seção 5 — RBAC -->
+            <h2 id="rbac-funcoes">5. Sistema de Funções e Administração (RBAC)</h2>
+            <p>Para além da segurança ao nível da linha descrita acima, a plataforma implementa um modelo de controlo de acesso baseado em funções (<strong>Role-Based Access Control — RBAC</strong>). Cada perfil possui um <code>role</code> que determina as suas capacidades dentro da aplicação, tanto no cliente como na base de dados (através da função SQL <code>can_manage_document()</code>).</p>
 
-            <h3>Estrutura de Gestão de Temas (<code>settings.ts</code>)</h3>
-            <p>Cada tema possui um conjunto específico de mapeamento de variáveis, aplicado diretamente ao elemento raiz do documento HTML (<code>document.documentElement</code>):</p>
+            <h3 id="rbac-papeis">5.1 Papéis e Respetivas Capacidades</h3>
+            <p>Existem três papéis formais, definidos em <code>src/lib/types.ts</code> como <code>Role = "member" | "teacher" | "admin"</code>. O mapeamento de capacidades está centralizado em <code>src/lib/admin.ts</code>:</p>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Papel</th>
+                            <th>Etiqueta</th>
+                            <th>Capacidades</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>member</code></td>
+                            <td><span class="badge">Membro</span></td>
+                            <td>Consultar todos os materiais; enviar e gerir os seus próprios ficheiros.</td>
+                        </tr>
+                        <tr>
+                            <td><code>teacher</code></td>
+                            <td><span class="badge">Professor</span></td>
+                            <td>Tudo o de Membro, <strong>mais</strong>: gerir (editar/eliminar) materiais de qualquer Membro e conceder acessos a novos emails.</td>
+                        </tr>
+                        <tr>
+                            <td><code>admin</code></td>
+                            <td><span class="badge">Administrador</span></td>
+                            <td>Acesso total: gere materiais de qualquer utilizador (incluindo professores e outros administradores) e tem acesso ao painel de administração completo.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>As funções auxiliares <code>isStaff(role)</code> (professor <em>ou</em> administrador) e <code>canManageDocument(myRole, myId, ownerId, ownerRole)</code> codificam estas regras no cliente, espelhando exatamente a política SQL. Note-se ainda o conceito de <strong>email de administração</strong>: o endereço constante em <code>ADMIN_EMAIL</code> (atualmente <code>devtest@etap.pt</code>) é o único que vê o botão <em>Administração</em>, verificado via <code>isAdminEmail()</code>.</p>
+
+            <h3 id="rbac-painel">5.2 Painel de Administração (<code>admin-panel.tsx</code>)</h3>
+            <p>O botão <strong>«Administração»</strong> na barra lateral (visível apenas para o email administrador) abre um diálogo modal tabulado que centraliza a gestão da plataforma. O painel carrega os dados em paralelo através de <code>Promise.all([fetchUsers(), fetchInvites(), fetchAllDocuments()])</code> e apresenta três separadores:</p>
+            <div class="glass-card">
+                <h4 style="margin-bottom:6px;color:var(--fg);">Separadores do Painel</h4>
+                <ul>
+                    <li><strong>Utilizadores:</strong> Lista todos os perfis registados com contagem de documentos (<code>doc_count</code>) e respetivo papel. Cada linha oferece uma ação <em>Papel</em> que abre o diálogo de concessão pré-preenchido com o email e o papel atual desse utilizador.</li>
+                    <li><strong>Convites:</strong> Mostra os emails externos com acesso pendente, quem concedeu o acesso (<code>granted_by_profile</code>) e quando. Cada convite pode ser revogado individualmente através da RPC <code>revoke_invite</code>, com confirmação em dois passos para evitar remoções acidentais.</li>
+                    <li><strong>Documentos:</strong> Vista de supervisão com <strong>todos</strong> os materiais da plataforma, incluindo categoria, tamanho, data e autor — útil para auditoria global.</li>
+                </ul>
+            </div>
+
+            <h3 id="rbac-conceder">5.3 Conceder Acessos (<code>grant-role-dialog.tsx</code>)</h3>
+            <p>O diálogo <em>«Conceder acesso»</em> (disponível no botão lateral para qualquer <em>staff</em> e dentro do painel administrativo) permite pré-autorizar um email externo — tipicamente <code>@gmail.com</code> ou <code>@etap.pt</code> — a registar-se na plataforma com um papel específico. O fluxo é o seguinte:</p>
+            <ol>
+                <li>O utilizador introduz o email e escolhe o papel; o cliente valida o formato (<code>/^[^\s@]+@[^\s@]+\.[^\s@]+$/</code>) e mostra uma antevisão das permissões associadas ao papel selecionado.</li>
+                <li>A submissão invoca a RPC <code>grant_role(p_email, p_role)</code>, que insere o registo na tabela <code>invites</code>.</li>
+                <li>Após o sucesso, o diálogo aguarda ~600&nbsp;ms (para exibir o <em>feedback</em> visual) e notifica o componente pai através de <code>onGranted(email, role)</code>, despoletando um <code>silentRefresh()</code> para manter as listas sincronizadas.</li>
+                <li>Quando o email convidado efetua o registo, a política RLS associada valida a sua presença na tabela <code>invites</code> e atribui automaticamente o papel concedido.</li>
+            </ol>
+            <div class="highlight-box">
+                <strong>🔑 Boa prática:</strong> Os papéis concedidos a emails externos devem ser sempre os mais restritos possíveis (preferir <code>member</code>). Um convite pode ser revogado a qualquer momento no separador <em>Convites</em> do painel, mas isso não afeta utilizadores já registados — o respetivo papel terá de ser alterado individualmente.
+            </div>
+
+            <!-- Seção 6 — Motor de Estilos (expandido) -->
+            <h2 id="motor-estilos">6. Motor de Estilos e Sistema de Temas</h2>
+            <p>Um dos pilares da <strong>ETAP Biblioteca</strong> é a personalização visual. Toda a aparência da aplicação é controlada por um motor de temas que combina <strong>variáveis CSS dinâmicas</strong>, <strong>gradientes animados</strong> e <strong>tipografia configurável</strong>. Esta secção descreve exaustivamente cada camada do sistema, do ficheiro de definições à renderização no ecrã.</p>
+
+            <h3 id="temas-arquitetura">6.1 Arquitetura de Variáveis CSS</h3>
+            <p>Todo o interface está parametrizado por um conjunto fixo de <strong>variáveis CSS</strong> definidas na raiz do documento. Em vez de o CSS referenciar cores literais, referencia sempre estas variáveis (ex.: <code>background: var(--bg-2)</code>). Quando se muda de tema, basta reescrever os valores destas variáveis e <strong>todo o interface se repinta instantaneamente</strong>, sem necessidade de recarregar a página ou de reprocessar folhas de estilo.</p>
+            <p>A tabela seguinte descreve o vocabulário completo de variáveis utilizado em toda a aplicação:</p>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Variável</th>
+                            <th>Função</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>--bg</code> … <code>--bg-4</code></td><td>Quatro níveis de profundidade de fundo (base, cartões, <em>hover</em>, superfícies elevadas). Permitem criar hierarquia visual mesmo dentro do mesmo tema.</td></tr>
+                        <tr><td><code>--border</code>, <code>--border-2</code></td><td>Dois níveis de contorno: o ténue para separações subtis e o mais forte para elementos em foco ou ativos.</td></tr>
+                        <tr><td><code>--fg</code>, <code>--fg-2</code>, <code>--fg-3</code></td><td>Três níveis de texto: principal (alto contraste), secundário (descrições) e terciário (metadados, <em>placeholders</em>).</td></tr>
+                        <tr><td><code>--accent</code>, <code>--accent-2</code>, <code>--accent-bg</code></td><td>Cor de destaque do tema, a sua variante mais escura (para <em>hover</em>) e o respetivo fundo suave para chips/badges ativos.</td></tr>
+                        <tr><td><code>--green</code>/<code>--green-bg</code>, <code>--red</code>/<code>--red-bg</code>, <code>--amber</code>/<code>--amber-bg</code></td><td>Pares semânticos (cor + fundo) para estados de sucesso, erro e aviso — usados em notificações, badges e confirmações.</td></tr>
+                        <tr><td><code>--purple</code></td><td>Cor de acento adicional para elementos experimentais (ex.: separador «Experimental» das definições).</td></tr>
+                        <tr><td><code>--font-body</code></td><td>Família tipográfica aplicada ao corpo do documento.</td></tr>
+                        <tr><td><code>--is-gradient</code></td><td>Flag numérica (<code>0</code>/<code>1</code>) lida por utilitários para detetar se um tema gradiente está ativo.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="highlight-box">
+                <strong>💡 Princípio de desenho:</strong> porque os componentes consomem <em>apenas</em> variáveis (nunca cores literais), adicionar um novo tema não exige tocar em nenhum componente — basta registar um novo objeto no catálogo de temas com os valores pretendidos.
+            </div>
+
+            <h3 id="temas-catalogo">6.2 Catálogo de Temas (<code>THEMES</code>)</h3>
+            <p>Todos os temas estão declarados em <code>src/lib/settings.ts</code> como objetos <code>ThemeDef</code>. Cada definição contém metadados de apresentação (etiqueta, descrição, amostra de cor), o mapa de variáveis CSS e, opcionalmente, um gradiente de fundo. A estrutura do tipo é a seguinte:</p>
+            <pre><span class="lang-tag">TypeScript</span><code><span class="kw">export interface</span> <span class="fn">ThemeDef</span> {
+  id: ThemeId;            <span class="cm">// identificador único (ex.: "ocean")</span>
+  label: string;          <span class="cm">// nome apresentado ao utilizador</span>
+  description: string;    <span class="cm">// subtítulo descritivo</span>
+  swatch: string;         <span class="cm">// cor de amostra do acento</span>
+  bgSwatch: string;       <span class="cm">// cor de amostra do fundo</span>
+  experimental?: boolean; <span class="cm">// se verdadeiro, aparece na secção "Experimental"</span>
+  bodyGradient?: string;  <span class="cm">// gradiente CSS aplicado ao body (temas animados)</span>
+  vars: Record&lt;string, string&gt;; <span class="cm">// mapa de variáveis CSS</span>
+}</code></pre>
+            <p>O catálogo totaliza <strong>17 temas</strong>, divididos em duas famílias: <strong>padrão</strong> (fundos sólidos) e <strong>experimentais</strong> (fundos em gradiente animado).</p>
+
+            <h4 style="margin-top:24px;color:var(--fg);">Tema padrão de exemplo</h4>
             <pre><span class="lang-tag">TypeScript</span><code><span class="kw">export</span> <span class="kw">const</span> <span class="fn">THEMES</span>: ThemeDef[] <span class="op">=</span> [
   {
     id: <span class="str">"etap-default"</span>,
@@ -811,20 +943,174 @@
       <span class="str">"--border"</span>:   <span class="str">"#30363d"</span>,
       <span class="str">"--fg"</span>:       <span class="str">"#e6edf3"</span>,
       <span class="str">"--accent"</span>:   <span class="str">"#2f81f7"</span>,
+      <span class="cm">// ... (todas as restantes variáveis)</span>
     },
   },
-  <span class="cm">// Outros temas da aplicação</span>
+  <span class="cm">// ... 16 temas adicionais</span>
 ];</code></pre>
 
-            <h3>Processamento de Temas Gradientes (Aurora, Dusk, Synthwave, Prism)</h3>
-            <ul>
-                <li><strong>Ativação:</strong> Quando um tema gradiente é selecionado, a aplicação adiciona a classe <code>gradient-active</code> ao elemento <code>body</code> do documento.</li>
-                <li><strong>Transição Fluida:</strong> É executada uma animação keyframe (<code>background-position</code> e <code>background-size</code>) que movimenta o gradiente ao longo do fundo da aplicação de forma impercetível e contínua.</li>
-                <li><strong>Transparência de Painéis:</strong> Os painéis laterais e superiores ajustam automaticamente os seus valores de opacidade através do mapeamento de classes dinâmicas, permitindo a visibilidade controlada do gradiente de fundo sem comprometer a legibilidade do texto.</li>
-            </ul>
+            <h4 style="margin-top:24px;color:var(--fg);">Lista completa de temas disponíveis</h4>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Família</th>
+                            <th>ID</th>
+                            <th>Nome</th>
+                            <th>Descrição</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td rowspan="11">Padrão (sólido)</td><td><code>etap-default</code></td><td>Etap Default</td><td>Paleta escura estilo GitHub (tema institucional)</td></tr>
+                        <tr><td><code>night</code></td><td>Night</td><td>Cinzento escuro, contraste suave</td></tr>
+                        <tr><td><code>midnight</code></td><td>Midnight</td><td>Preto total, contraste máximo</td></tr>
+                        <tr><td><code>ocean</code></td><td>Ocean</td><td>Paleta azul-profundo</td></tr>
+                        <tr><td><code>ruby</code></td><td>Ruby</td><td>Acentos vermelhos intensos</td></tr>
+                        <tr><td><code>emerald</code></td><td>Emerald</td><td>Verde-floresta escuro</td></tr>
+                        <tr><td><code>white</code></td><td>White</td><td>Tema claro minimalista (único claro)</td></tr>
+                        <tr><td><code>slate</code></td><td>Slate</td><td>Azul-cinzento profissional</td></tr>
+                        <tr><td><code>amber</code></td><td>Amber</td><td>Dourado quente sobre carvão</td></tr>
+                        <tr><td><code>rose-quartz</code></td><td>Rose Quartz</td><td>Rosa-acastanhado, contraste suave</td></tr>
+                        <tr><td><code>obsidian</code></td><td>Obsidian</td><td>Preto puro com acentos em cobre</td></tr>
+                        <tr><td rowspan="8">Experimental (gradiente)</td><td><code>aurora</code></td><td>Aurora</td><td>Aurora boreal — azul, verde, violeta</td></tr>
+                        <tr><td><code>dusk</code></td><td>Dusk</td><td>Pôr-do-sol quente</td></tr>
+                        <tr><td><code>synthwave</code></td><td>Synthwave</td><td>Neon retro violeta-magenta</td></tr>
+                        <tr><td><code>prism</code></td><td>Prism</td><td>Violeta profundo iridiscente</td></tr>
+                        <tr><td><code>nebula</code></td><td>Nebula</td><td>Espaço profundo: violeta, teal, magenta</td></tr>
+                        <tr><td><code>inferno</code></td><td>Inferno</td><td>Fogo vulcânico: brasa, lava, cinza</td></tr>
+                        <tr><td><code>arctic</code></td><td>Arctic</td><td>Gelo glacial: branco-azulado e neve</td></tr>
+                        <tr><td><code>venom</code></td><td>Venom</td><td>Verde tóxico sobre preto absoluto</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>Na interface de Definições (<code>settings-dialog.tsx</code>) os temas são automaticamente separados em duas colunas pela condição <code>theme.experimental</code>, e o grupo experimental é encabeçado por um selo «Experimental» roxo. Cada tema é apresentado como um cartão cuja amostra (Swatch) <strong>renderiza o próprio gradiente</strong> no caso dos temas animados, dando ao utilizador uma antevisão fiel antes de aplicar.</p>
 
-            <!-- Seção 6 -->
-            <h2 id="fluxo-navegacao">6. Fluxo Geral de Navegação e Interação</h2>
+            <h3 id="temas-aplicacao">6.3 Aplicação das Definições ao DOM (<code>applySettings</code>)</h3>
+            <p>A função <code>applySettings(s: AppSettings)</code> em <code>src/lib/settings.ts</code> é o <strong>único ponto</strong> por onde todas as alterações visuais passam. Quer o utilizador mude de tema, de fonte ou de tamanho, o fluxo é sempre: <code>setSettings → applySettings(next) → saveSettings(next)</code>. As suas responsabilidades são:</p>
+            <ol>
+                <li><strong>Resolver o tema/fonte/tamanho:</strong> procura as definições completas a partir do <code>id</code>; se não encontrar, recorre ao primeiro elemento (<em>fallback</em> seguro).</li>
+                <li><strong>Escrever as variáveis CSS:</strong> percorre <code>theme.vars</code> e aplica cada par via <code>root.style.setProperty(k, v)</code> no <code>&lt;html&gt;</code>. Esta é a mudança que repinta instantaneamente toda a aplicação.</li>
+                <li><strong>Definir o fundo do <code>body</code>:</strong> aplica diretamente <code>document.body.style.background</code> com o gradiente (se existir) ou a cor sólida <code>--bg</code>. Esta atribuição direta é importante: garante que o fundo muda <strong>imediatamente</strong>, sem aguardar a cascata de variáveis CSS.</li>
+                <li><strong>Gestionar o gradiente:</strong> alterna a classe <code>gradient-active</code> e a flag <code>--is-gradient</code> no corpo; limpa qualquer classe <code>theme-*</code> anterior e adiciona <code>theme-&lt;id&gt;</code> (ex.: <code>theme-nebula</code>) — esta classe é o que permite atribuir uma animação específica por tema (ver 6.4).</li>
+                <li><strong>Aplicar tipografia:</strong> define <code>--font-body</code>, o <code>font-family</code> do corpo e o <code>font-size</code> base; carrega a Google Font correspondente sob demanda (uma só vez por <code>font.id</code>, evitando duplicação de tags <code>&lt;link&gt;</code>).</li>
+            </ol>
+            <pre><span class="lang-tag">TypeScript</span><code><span class="kw">export function</span> <span class="fn">applySettings</span>(s: AppSettings): void {
+  <span class="kw">if</span> (<span class="kw">typeof</span> document <span class="op">===</span> <span class="str">"undefined"</span>) <span class="kw">return</span>;
+
+  <span class="kw">const</span> theme <span class="op">=</span> THEMES.find((t) <span class="op">=></span> t.id <span class="op">===</span> s.theme) ?? THEMES[<span class="num">0</span>];
+  <span class="kw">const</span> root  <span class="op">=</span> document.documentElement;
+
+  <span class="cm">// 1. Variáveis do tema</span>
+  <span class="kw">for</span> (<span class="kw">const</span> [k, v] <span class="kw">of</span> Object.entries(theme.vars)) {
+    root.style.setProperty(k, v);
+  }
+
+  <span class="cm">// 2. Fundo do body (gradiente ou cor sólida) + classe de tema</span>
+  <span class="kw">const</span> isGradient <span class="op">=</span> !!theme.bodyGradient;
+  document.body.style.background <span class="op">=</span> theme.bodyGradient ?? theme.vars[<span class="str">"--bg"</span>];
+  document.body.classList.toggle(<span class="str">"gradient-active"</span>, isGradient);
+  root.style.setProperty(<span class="str">"--is-gradient"</span>, isGradient ? <span class="str">"1"</span> : <span class="str">"0"</span>);
+  document.body.classList.add(`theme-${theme.id}`);
+
+  <span class="cm">// 3. (fonte e tamanho aplicados de seguida)</span>
+}</code></pre>
+            <p>O estado é persistido em <code>localStorage</code> sob a chave <code>etap-settings-v1</code> como um único objeto JSON (<code>{theme, font, fontSize, language}</code>), e é lido por <code>loadSettings()</code> com <em>merge</em> sobre <code>DEFAULT_SETTINGS</code>, garantindo robustez mesmo que o formato evolua. No arranque, <code>library-app.tsx</code> aplica as definições gravadas assim que a sessão é validada — e, ao terminar sessão, força o tema institucional <code>etap-default</code> para que a página de entrada mantenha a sua identidade visual própria.</p>
+
+            <h3 id="temas-gradientes">6.4 Gradientes Animados (Temas Experimentais)</h3>
+            <p>Os oito temas experimentais diferem dos padrão por incluírem um campo <code>bodyGradient</code>: uma expressão CSS completa de <code>linear-gradient</code> ou <code>radial-gradient</code> (muitas vezes com múltiplas camadas sobrepostas). Quando <code>applySettings</code> deteta este campo, ativa um conjunto de mecanismos que transformam o fundo numa <strong>superfície viva e em movimento</strong>.</p>
+
+            <h4 style="margin-top:20px;color:var(--fg);">Camadas do gradiente</h4>
+            <p>Os temas usam duas estratégias de composição para gerar profundidade:</p>
+            <ul>
+                <li><strong><code>linear-gradient</code> direcionais</strong> (Aurora, Dusk, Synthwave, Prism) — uma transição suave entre 3–4 cores, com ângulos como <code>135deg</code> ou <code>160deg</code> para dar sensação de diagonal cinematográfica.</li>
+                <li><strong>Múltiplos <code>radial-gradient</code> elípticos</strong> (Nebula, Inferno, Arctic, Venom) — três elipses de cor posicionadas em diferentes pontos (ex.: <code>at 20% 30%</code>, <code>at 80% 70%</code>) sobre um fundo base, criando névoas de cor localizadas que parecem flutuar.</li>
+            </ul>
+            <p>Exemplo do gradiente do tema <strong>Nebula</strong> — três elipses violeta, teal e magenta sobre um preto profundo:</p>
+            <pre><span class="lang-tag">CSS</span><code>bodyGradient: <span class="str">"radial-gradient(ellipse at 20% 30%, #1a0535 0%, transparent 55%),
+radial-gradient(ellipse at 80% 70%, #03203a 0%, transparent 55%),
+radial-gradient(ellipse at 50% 90%, #200830 0%, transparent 50%),
+#04010f"</span></code></pre>
+
+            <h4 style="margin-top:20px;color:var(--fg);">Animações <em>keyframe</em> por tema</h4>
+            <p>O movimento é obtido animando <code>background-position</code>. O CSS global (<code>globals.css</code>) declara uma animação <code>@keyframes</code> distinta para cada tema gradiente, permitindo a cada um ter o seu próprio ritmo e padrão de deriva:</p>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr><th>Tema</th><th>Animação</th><th>Duração</th><th>Efeito</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Aurora, Dusk, Synthwave, Prism</td><td><code>gradient-shift</code></td><td>18s</td><td>Deriva suave das posições do gradiente linear.</td></tr>
+                        <tr><td>Nebula</td><td><code>nebula-drift</code></td><td>22s</td><td>Lenta deriva das três elipses, evocando nuvens interestelares.</td></tr>
+                        <tr><td>Inferno</td><td><code>inferno-pulse</code></td><td>14s</td><td>Pulsação mais rápida das brasas, lembrando calor vulcânico.</td></tr>
+                        <tr><td>Arctic</td><td><code>arctic-shimmer</code></td><td>20s</td><td>Oscilação tranquila, como reflexos no gelo.</td></tr>
+                        <tr><td>Venom</td><td><code>venom-breathe</code></td><td>16s</td><td>«Respiração» do verde tóxico,expandindo e contraindo.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>A animação genérica aplica-se sempre que <code>body.gradient-active</code> está presente, mas é <strong>sobreposta</strong> pela regra específica do tema graças à maior especificidade do seletor <code>body.gradient-active.theme-nebula</code>. Repare-se que todas usam <code>ease infinite</code> para um ciclo perpétuo e sem saltos. Para a animação poder decorrer, é ainda definido <code>background-size: 300% 300%</code> — um truente padrão que amplia a tela do gradiente para que o <code>background-position</code> tenha margem de manobra:</p>
+            <pre><span class="lang-tag">CSS</span><code><span class="cm">/* Animação base + específica por tema (globals.css) */</span>
+body.gradient-active {
+  background-size: 300% 300%, 300% 300%, 300% 300%, auto <span class="kw">!important</span>;
+  animation: gradient-shift 18s ease infinite;
+}
+body.gradient-active.theme-nebula  { animation: nebula-drift   22s ease infinite; }
+body.gradient-active.theme-inferno { animation: inferno-pulse  14s ease infinite; }
+body.gradient-active.theme-arctic  { animation: arctic-shimmer 20s ease infinite; }
+body.gradient-active.theme-venom   { animation: venom-breathe  16s ease infinite; }
+
+<span class="cm">/* Exemplo de uma das keyframes */</span>
+@keyframes nebula-drift {
+  0%   { background-position: 0% 0%,   100% 100%, 50% 100%; }
+  33%  { background-position: 30% 60%,  70%  30%, 20%  80%; }
+  66%  { background-position: 80% 20%,  10%  80%, 90%  20%; }
+  100% { background-position: 0% 0%,   100% 100%, 50% 100%; }
+}</code></pre>
+            <div class="highlight-box">
+                <strong>🎨 Nota de desempenho:</strong> animar <code>background-position</code> em gradientes grandes é uma operação que a GPU consegue acelerar, mas os temas experimentais ficam por isso mesmo classificados como «Experimental» — em hardware mais modesto a animação pode ser desativada trocando para um tema sólido.
+            </div>
+
+            <h3 id="temas-paineis">6.5 Painéis Transparentes e o padrão <code>gp-*</code></h3>
+            <p>Um desafio dos temas gradiente é fazer com que as <em>surfaces</em> opacas (barra lateral, barra superior, área principal) não tapem o fundo animado. A solução adotada baseia-se num padrão de classes prefixadas <code>gp-</code> (de <em>gradient-panel</em>): a barra lateral tem a classe <code>gp-sidebar</code>, a barra superior <code>gp-topbar</code> e a área de conteúdo <code>gp-main</code>.</p>
+            <p>Quando <code>gradient-active</code> está ativo no <code>body</code>, o CSS global substitui os fundos sólidos destes elementos por <strong>fundos semitransparentes com desfocagem</strong>, permitindo que o gradiente seja visível através deles sem comprometer a legibilidade:</p>
+            <pre><span class="lang-tag">CSS</span><code><span class="cm">/* globals.css — painéis tornam-se translúcidos só em temas gradiente */</span>
+.gradient-active .gp-sidebar {
+  background: rgba(0, 0, 0, 0.55) <span class="kw">!important</span>;
+  backdrop-filter: blur(16px);
+}
+.gradient-active .gp-topbar {
+  background: rgba(0, 0, 0, 0.45) <span class="kw">!important</span>;
+  backdrop-filter: blur(16px);
+}
+.gradient-active .gp-main {
+  background: transparent <span class="kw">!important</span>;
+}</code></pre>
+            <p>O efeito é uma espécie de <em>frosted glass</em> sobre o gradiente em movimento. Para temas sólidos, <code>gradient-active</code> está ausente e estas regras não se aplicam — os painéis regressam ao seu fundo sólido normal (ex.: <code>--bg-2</code>), pelo que o comportamento é totalmente reversível e transitório.</p>
+
+            <h3 id="temas-fontes">6.6 Tipografia e Dimensão do Texto</h3>
+            <p>Para além dos temas, o utilizador pode personalizar a família tipográfica e o tamanho base, ambos aplicados no mesmo ciclo <code>applySettings</code>. Existem <strong>5 famílias</strong> e <strong>4 dimensões</strong> disponíveis, definidas em <code>FONTS</code> e <code>FONT_SIZES</code>:</p>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr><th>ID</th><th>Fonte</th><th>Natureza</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>inter</code></td><td>Inter</td><td>Sans-serif limpa (padrão)</td></tr>
+                        <tr><td><code>ibm-plex-mono</code></td><td>IBM Plex Mono</td><td>Mono técnica</td></tr>
+                        <tr><td><code>geist</code></td><td>Geist</td><td>Sans minimalista (Vercel)</td></tr>
+                        <tr><td><code>jetbrains-mono</code></td><td>JetBrains Mono</td><td>Mono para programadores</td></tr>
+                        <tr><td><code>source-sans</code></td><td>Source Sans 3</td><td>Sans humanista legível</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p>As dimensões são <code>sm</code> (13px), <code>md</code> (15px, padrão), <code>lg</code> (17px) e <code>xl</code> (19px) e são aplicadas alterando o <code>font-size</code> do elemento raiz — porque o CSS rem das Tailwind scales com esse valor, <strong>toda a interface escala proporcionalmente</strong> com esta única alteração. Cada Google Font só é carregada quando é efetivamente selecionada (lazy-loading por <code>font.id</code>), evitando peso desnecessário no arranque.</p>
+
+            <!-- Seção 7 — i18n -->
+            <h2 id="i18n">7. Internacionalização (Português / Inglês)</h2>
+            <p>A aplicação é totalmente bilingue (Português e Inglês). As traduções residem num catálogo central (<code>src/lib/translations.ts</code>) indexado por uma chave tipada (<code>TranslationKey</code>), e o <em>hook</em> <code>useLanguage()</code> expõe a função <code>t(key, params?)</code>. Qualquer texto visível ao utilizador passa por esta função, nunca por literais em linha.</p>
+            <p>A interpolação de parâmetros suporta placeholders como <code>{maxChars}</code> e aceita valores <code>string | number</code> (convertidos internamente via <code>String(v)</code>), o que permite mensagens dinâmicas como «as tags não podem exceder {maxChars} caracteres». O idioma escolhido é gravado nas definições e aplicado no arranque a par do tema, fonte e tamanho.</p>
+
+            <!-- Seção 8 -->
+            <h2 id="fluxo-navegacao">8. Fluxo Geral de Navegação e Interação</h2>
             <p>O diagrama seguinte descreve a sequência lógica de operações efetuadas na plataforma:</p>
             <div class="mermaid-container" id="mermaidDiagram">
                 <!-- Mermaid diagram rendered via JS -->
