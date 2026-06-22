@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import type { Category, LibraryDocument } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/language-context";
 
 // ── Suggestion types ────────────────────────────────────────────────────────
 
@@ -52,6 +53,7 @@ export function Topbar({
   documents, categories, tags,
   onCategoryChange, onTagChange,
 }: Props) {
+  const { t } = useLanguage();
   const [focused, setFocused] = useState(false);
   const [spinning, setSpinning] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
@@ -215,7 +217,7 @@ export function Topbar({
       <button
         onClick={onMenuOpen}
         className="focus-ring grid h-10 w-10 shrink-0 place-items-center rounded-md border border-[var(--border)] text-[var(--fg-2)] transition-all hover:border-[var(--border-2)] hover:bg-[var(--bg-2)] hover:text-[var(--fg)] active:scale-95 lg:hidden"
-        aria-label="Menu"
+        aria-label={t("topbarMenuTooltip")}
       >
         <Menu size={18} />
       </button>
@@ -237,8 +239,8 @@ export function Topbar({
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setFocused(true)}
             onKeyDown={handleKeyDown}
-            placeholder="Pesquisar materiais…"
-            aria-label="Pesquisar materiais"
+            placeholder={t("topbarSearchPlaceholder")}
+            aria-label={t("topbarSearchAriaLabel")}
             aria-expanded={showDropdown}
             aria-haspopup="listbox"
             aria-autocomplete="list"
@@ -270,7 +272,7 @@ export function Topbar({
           >
             <SuggestionGroup
               kind="document"
-              label="Documentos"
+              label={t("topbarGroupDocuments")}
               icon={<FileText size={12} />}
               suggestions={suggestions}
               activeIdx={activeIdx}
@@ -280,7 +282,7 @@ export function Topbar({
             />
             <SuggestionGroup
               kind="category"
-              label="Categorias"
+              label={t("topbarGroupCategories")}
               icon={<Folder size={12} />}
               suggestions={suggestions}
               activeIdx={activeIdx}
@@ -290,7 +292,7 @@ export function Topbar({
             />
             <SuggestionGroup
               kind="tag"
-              label="Tags"
+              label={t("topbarGroupTags")}
               icon={<Hash size={12} />}
               suggestions={suggestions}
               activeIdx={activeIdx}
@@ -303,15 +305,15 @@ export function Topbar({
             <div className="flex items-center gap-3 border-t border-[var(--border)] px-3 py-2">
               <span className="mono text-[10px] text-[var(--fg-3)]">
                 <kbd className="mr-0.5 rounded border border-[var(--border)] bg-[var(--bg-2)] px-1 py-px text-[9px]">↑↓</kbd>
-                navegar
+                {t("topbarHintNavigate")}
               </span>
               <span className="mono text-[10px] text-[var(--fg-3)]">
                 <kbd className="mr-0.5 rounded border border-[var(--border)] bg-[var(--bg-2)] px-1 py-px text-[9px]">↵</kbd>
-                selecionar
+                {t("topbarHintSelect")}
               </span>
               <span className="mono text-[10px] text-[var(--fg-3)]">
                 <kbd className="mr-0.5 rounded border border-[var(--border)] bg-[var(--bg-2)] px-1 py-px text-[9px]">esc</kbd>
-                fechar
+                {t("topbarHintClose")}
               </span>
             </div>
           </div>
@@ -326,7 +328,7 @@ export function Topbar({
             "focus-ring grid h-10 w-10 place-items-center rounded-md border border-[var(--border)] text-[var(--fg-2)] transition-all hover:border-[var(--border-2)] hover:bg-[var(--bg-2)] hover:text-[var(--fg)] active:scale-95",
             spinning && "[&>svg]:animate-spin"
           )}
-          aria-label="Atualizar"
+          aria-label={t("topbarRefreshTooltip")}
         >
           <RotateCcw size={16} />
         </button>
@@ -334,7 +336,7 @@ export function Topbar({
         <button
           onClick={onSettings}
           className="focus-ring grid h-10 w-10 place-items-center rounded-md border border-[var(--border)] text-[var(--fg-2)] transition-all hover:border-[var(--border-2)] hover:bg-[var(--bg-2)] hover:text-[var(--fg)] active:scale-95"
-          aria-label="Definições"
+          aria-label={t("topbarSettingsTooltip")}
         >
           <Settings size={16} />
         </button>
@@ -344,7 +346,7 @@ export function Topbar({
           className="focus-ring flex h-10 items-center gap-2 rounded-md border border-[var(--green)] bg-[var(--green-bg)] px-4 text-sm font-semibold text-[var(--green)] shadow-sm transition-all hover:opacity-80 active:scale-95"
         >
           <Plus size={16} />
-          <span className="hidden sm:inline">Upload</span>
+          <span className="hidden sm:inline">{t("topbarUploadBtn")}</span>
         </button>
       </div>
     </header>
@@ -365,6 +367,7 @@ function SuggestionGroup({
   onSelect: (s: Suggestion) => void;
   onHover: (i: number) => void;
 }) {
+  const { t } = useLanguage();
   const items = suggestions.filter((s) => s.kind === kind);
   if (items.length === 0) return null;
 
@@ -406,10 +409,10 @@ function SuggestionGroup({
               </span>
             )}
             {s.kind === "category" && (
-              <span className="mono shrink-0 text-[10px] text-[var(--fg-3)]">filtrar</span>
+              <span className="mono shrink-0 text-[10px] text-[var(--fg-3)]">{t("topbarHintFilter")}</span>
             )}
             {s.kind === "tag" && (
-              <span className="mono shrink-0 text-[10px] text-[var(--fg-3)]">filtrar</span>
+              <span className="mono shrink-0 text-[10px] text-[var(--fg-3)]">{t("topbarHintFilter")}</span>
             )}
           </button>
         );

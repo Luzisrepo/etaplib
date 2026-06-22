@@ -8,7 +8,10 @@ import { Dashboard } from "@/components/dashboard";
 import { supabase } from "@/lib/supabase";
 import { applySettings, DEFAULT_SETTINGS, loadSettings } from "@/lib/settings";
 
-export function LibraryApp() {
+import { LanguageProvider, useLanguage } from "@/lib/language-context";
+
+function LibraryAppInner() {
+  const { t } = useLanguage();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -54,7 +57,7 @@ export function LibraryApp() {
           <div className="h-px w-20 overflow-hidden rounded-full" style={{ background: "#21262d" }}>
             <div className="h-full w-1/2 animate-[shimmer_1s_ease_infinite] rounded-full" style={{ background: "#2f81f7" }} />
           </div>
-          <p className="mono text-[10px] uppercase tracking-widest" style={{ color: "#484f58" }}>a preparar…</p>
+          <p className="mono text-[10px] uppercase tracking-widest" style={{ color: "#484f58" }}>{t("loading")}</p>
         </div>
       </div>
     );
@@ -62,4 +65,12 @@ export function LibraryApp() {
 
   if (!session) return <AuthPanel />;
   return <Dashboard session={session} />;
+}
+
+export function LibraryApp() {
+  return (
+    <LanguageProvider>
+      <LibraryAppInner />
+    </LanguageProvider>
+  );
 }

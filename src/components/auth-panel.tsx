@@ -9,6 +9,7 @@ import {
 import { AuthDialog, type AuthMode } from "@/components/auth-dialog";
 import { StatusCallout } from "@/components/ui/status-callout";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/language-context";
 
 const SplineViewer = dynamic(
   () => import("@/components/spline-viewer").then(m => ({ default: m.SplineViewer })),
@@ -16,6 +17,7 @@ const SplineViewer = dynamic(
 );
 
 export function AuthPanel() {
+  const { t } = useLanguage();
   const [authMode, setAuthMode] = useState<AuthMode | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [splineReady, setSplineReady] = useState(false);
@@ -32,7 +34,7 @@ export function AuthPanel() {
       return;
     }
     if (params.get("verified") === "1") {
-      setNotice("Email confirmado. Inicia sessão para abrir a biblioteca.");
+      setNotice(t("authPanelVerifiedSuccess"));
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
@@ -105,7 +107,7 @@ export function AuthPanel() {
             <div className="grid h-7 w-7 place-items-center rounded-md border border-[var(--border)]/60 bg-[var(--bg)]/80 backdrop-blur-sm">
               <BookMarked size={14} className="text-[var(--accent)]" />
             </div>
-            <span className="mono text-xs font-semibold tracking-widest text-[var(--fg-2)]">ETAP / BIBLIOTECA</span>
+            <span className="mono text-xs font-semibold tracking-widest text-[var(--fg-2)]">{t("authPanelLogo")}</span>
           </div>
 
           {/* Bottom: Hero copy */}
@@ -116,28 +118,28 @@ export function AuthPanel() {
             {/* Trust badge */}
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--border)]/70 bg-[var(--bg)]/70 px-3 py-1.5 text-xs text-[var(--fg-2)] backdrop-blur-md">
               <ShieldCheck size={13} className="text-[var(--green)]" />
-              <span>Domínio ETAP protegido por Supabase Auth</span>
+              <span>{t("authPanelTrustBadge")}</span>
             </div>
 
             <h1 className="text-4xl font-bold leading-[1.15] tracking-tight text-[var(--fg)] xl:text-5xl [text-shadow:0_2px_40px_rgba(0,0,0,0.8)]">
-              Biblioteca digital{" "}
+              {t("authPanelTitlePart1")}{" "}
               <span className="bg-gradient-to-r from-[var(--accent)] to-[var(--purple)] bg-clip-text text-transparent">
-                para partilha
+                {t("authPanelTitleHighlight")}
               </span>
-              {" "}de materiais.
+              {t("authPanelTitlePart2")}
             </h1>
 
             <p className="mt-4 max-w-md text-sm leading-7 text-[var(--fg-2)] [text-shadow:0_1px_20px_rgba(0,0,0,0.9)]">
-              PDFs, vídeos, apresentações e recursos de estudo centralizados numa interface rápida, preparada para o dia a dia da escola.
+              {t("authPanelDesc")}
             </p>
 
             {/* Stat pills */}
             <div className="mt-8 flex flex-wrap gap-2">
               {[
-                { icon: <Upload size={12} />, label: "bucket biblioteca" },
-                { icon: <ShieldCheck size={12} />, label: "@etap.pt" },
-                { icon: <Users size={12} />, label: "owner-first RLS" },
-                { icon: <FileStack size={12} />, label: "500 MB por ficheiro" },
+                { icon: <Upload size={12} />, label: t("authPanelPill1") },
+                { icon: <ShieldCheck size={12} />, label: t("authPanelPill2") },
+                { icon: <Users size={12} />, label: t("authPanelPill3") },
+                { icon: <FileStack size={12} />, label: t("authPanelPill4") },
               ].map(({ icon, label }) => (
                 <div
                   key={label}
@@ -169,15 +171,15 @@ export function AuthPanel() {
             </div>
             <div>
               <p className="mono text-[10px] uppercase tracking-widest text-[var(--fg-3)]">ETAP</p>
-              <p className="text-sm font-semibold text-[var(--fg)]">Biblioteca</p>
+              <p className="text-sm font-semibold text-[var(--fg)]">{t("sidebarLogoSub")}</p>
             </div>
           </div>
 
           {/* Panel heading */}
           <div className="mb-6">
-            <p className="mono text-[10px] font-semibold uppercase tracking-widest text-[var(--fg-3)]">acesso institucional</p>
-            <h2 className="mt-1.5 text-xl font-bold text-[var(--fg)]">Bem-vindo de volta</h2>
-            <p className="mt-1 text-sm text-[var(--fg-2)]">Usa o teu email <span className="mono text-[var(--accent)]">@etap.pt</span> para aceder.</p>
+            <p className="mono text-[10px] font-semibold uppercase tracking-widest text-[var(--fg-3)]">{t("authPanelInstAccess")}</p>
+            <h2 className="mt-1.5 text-xl font-bold text-[var(--fg)]">{t("authPanelWelcomeBack")}</h2>
+            <p className="mt-1 text-sm text-[var(--fg-2)]">{t("authPanelAccessInfoPart1")}<span className="mono text-[var(--accent)]">@etap.pt</span>{t("authPanelAccessInfoPart2")}</p>
           </div>
 
           {notice && (
@@ -191,31 +193,31 @@ export function AuthPanel() {
             <AuthButton
               onClick={() => setAuthMode("login")}
               icon={<LockKeyhole size={15} />}
-              label="Iniciar sessão"
-              sublabel="Entra com a tua conta"
+              label={t("authPanelLoginBtn")}
+              sublabel={t("authPanelLoginBtnSub")}
               primary
             />
             <AuthButton
               onClick={() => setAuthMode("register")}
               icon={<CheckCircle2 size={15} />}
-              label="Criar conta"
-              sublabel="Registo com email @etap.pt"
+              label={t("authPanelRegisterBtn")}
+              sublabel={t("authPanelRegisterBtnSub")}
             />
           </div>
 
           {/* Divider */}
           <div className="my-6 flex items-center gap-3">
             <div className="h-px flex-1 bg-[var(--bg-4)]" />
-            <span className="mono text-[10px] text-[var(--fg-3)]">funcionalidades</span>
+            <span className="mono text-[10px] text-[var(--fg-3)]">{t("authPanelFeaturesHeader")}</span>
             <div className="h-px flex-1 bg-[var(--bg-4)]" />
           </div>
 
           {/* Feature list */}
           <div className="space-y-1">
             {[
-              { icon: <Upload size={13} />, title: "Uploads até 500 MB", desc: "PDF, vídeo, PPTX, ZIP e mais." },
-              { icon: <FolderOpen size={13} />, title: "Organização rápida", desc: "Categorias, tags e pesquisa global." },
-              { icon: <ShieldCheck size={13} />, title: "Permissões por autor", desc: "Só o dono edita ou elimina." },
+              { icon: <Upload size={13} />, title: t("authPanelFeatureTitle1"), desc: t("authPanelFeatureDesc1") },
+              { icon: <FolderOpen size={13} />, title: t("authPanelFeatureTitle2"), desc: t("authPanelFeatureDesc2") },
+              { icon: <ShieldCheck size={13} />, title: t("authPanelFeatureTitle3"), desc: t("authPanelFeatureDesc3") },
             ].map(({ icon, title, desc }) => (
               <div key={title} className="flex items-start gap-3 rounded-md px-3 py-2.5 transition-colors hover:bg-[var(--bg-2)]">
                 <div className="mt-px grid h-6 w-6 shrink-0 place-items-center rounded border border-[var(--bg-4)] bg-[var(--bg-2)] text-[var(--fg-3)]">
@@ -231,7 +233,7 @@ export function AuthPanel() {
 
           {/* Footer */}
           <p className="mono mt-8 text-center text-[10px] text-[var(--fg-3)]">
-            ETAP Biblioteca · {new Date().getFullYear()}
+            ETAP {t("sidebarLogoSub")} · {new Date().getFullYear()}
           </p>
         </div>
       </div>

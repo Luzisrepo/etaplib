@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, FlaskConical, Monitor, Palette, Type, X, ZoomIn } from "lucide-react";
+import { Check, FlaskConical, Globe, Monitor, Palette, Type, X, ZoomIn } from "lucide-react";
 import {
   applySettings,
   AppSettings,
@@ -17,8 +17,9 @@ import {
   type ThemeId,
 } from "@/lib/settings";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/lib/language-context";
 
-type Tab = "theme" | "font" | "size";
+type Tab = "theme" | "font" | "size" | "language";
 
 type Props = {
   open: boolean;
@@ -26,6 +27,7 @@ type Props = {
 };
 
 export function SettingsDialog({ open, onClose }: Props) {
+  const { setLanguage, t } = useLanguage();
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [tab, setTab] = useState<Tab>("theme");
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -52,14 +54,19 @@ export function SettingsDialog({ open, onClose }: Props) {
   function setTheme(theme: ThemeId) { apply({ ...settings, theme }); }
   function setFont(font: FontId)    { apply({ ...settings, font }); }
   function setSize(fontSize: FontSize) { apply({ ...settings, fontSize }); }
+  function handleLanguageChange(lang: "pt" | "en") {
+    setLanguage(lang);
+    apply({ ...settings, language: lang });
+  }
 
   const standardThemes    = THEMES.filter((t) => !t.experimental);
   const experimentalThemes = THEMES.filter((t) => t.experimental);
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: "theme", label: "Tema",    icon: <Palette size={15} /> },
-    { id: "font",  label: "Fonte",   icon: <Type size={15} /> },
-    { id: "size",  label: "Tamanho", icon: <ZoomIn size={15} /> },
+    { id: "theme", label: t("settingsDialogTabTheme"),    icon: <Palette size={15} /> },
+    { id: "font",  label: t("settingsDialogTabFont"),   icon: <Type size={15} /> },
+    { id: "size",  label: t("settingsDialogTabSize"), icon: <ZoomIn size={15} /> },
+    { id: "language", label: t("settingsDialogTabLanguage"), icon: <Globe size={15} /> },
   ];
 
   return (
@@ -67,7 +74,7 @@ export function SettingsDialog({ open, onClose }: Props) {
       className="fixed inset-0 z-50 grid place-items-center bg-black/70 px-4 py-8 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      aria-label="Definições"
+      aria-label={t("settingsDialogHeader")}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
@@ -81,14 +88,14 @@ export function SettingsDialog({ open, onClose }: Props) {
               <Monitor size={17} />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-[var(--fg)]">Definições de Aparência</h2>
-              <p className="mono text-[11px] text-[var(--fg-2)]">Personaliza a interface</p>
+              <h2 className="text-sm font-semibold text-[var(--fg)]">{t("settingsDialogHeader")}</h2>
+              <p className="mono text-[11px] text-[var(--fg-2)]">{t("settingsDialogHeaderSub")}</p>
             </div>
           </div>
           <button
             onClick={onClose}
             className="focus-ring grid h-8 w-8 place-items-center rounded-md text-[var(--fg-3)] hover:bg-[var(--bg-3)] hover:text-[var(--fg)] transition-colors"
-            aria-label="Fechar"
+            aria-label={t("close")}
           >
             <X size={17} />
           </button>
@@ -120,7 +127,7 @@ export function SettingsDialog({ open, onClose }: Props) {
               {/* Standard themes */}
               <div>
                 <p className="text-xs text-[var(--fg-2)] mb-3">
-                  Escolhe a paleta de cores da interface.
+                  {t("settingsDialogTabThemeDesc")}
                 </p>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {standardThemes.map((theme) => (
@@ -146,7 +153,7 @@ export function SettingsDialog({ open, onClose }: Props) {
                   <div className="h-px flex-1 bg-[var(--border)]" />
                 </div>
                 <p className="text-xs text-[var(--fg-3)] mb-3">
-                  Temas com gradientes dinâmicos aplicados ao fundo da interface.
+                  {t("settingsDialogTabThemeExpHeader")}
                 </p>
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {experimentalThemes.map((theme) => (
@@ -165,7 +172,7 @@ export function SettingsDialog({ open, onClose }: Props) {
           {tab === "font" && (
             <div className="space-y-3">
               <p className="text-xs text-[var(--fg-2)] mb-4">
-                Escolhe a tipografia base da interface.
+                {t("settingsDialogTabFontDesc")}
               </p>
               <div className="flex flex-col gap-2">
                 {FONTS.map((font) => {
@@ -204,7 +211,7 @@ export function SettingsDialog({ open, onClose }: Props) {
           {tab === "size" && (
             <div className="space-y-3">
               <p className="text-xs text-[var(--fg-2)] mb-4">
-                Ajusta o tamanho base do texto em toda a interface.
+                {t("settingsDialogTabSizeDesc")}
               </p>
               <div className="flex flex-col gap-2">
                 {FONT_SIZES.map((sz) => {
@@ -239,9 +246,50 @@ export function SettingsDialog({ open, onClose }: Props) {
               </div>
               <div className="mt-4 rounded-lg border border-[var(--border)] bg-[var(--bg)] p-4">
                 <p className="text-[var(--fg-2)] leading-relaxed">
-                  <span className="font-semibold text-[var(--fg)]">Pré-visualização: </span>
-                  Este texto mostra o tamanho atual da fonte em uso na biblioteca ETAP.
+                  <span className="font-semibold text-[var(--fg)]">{t("settingsDialogTabSizePreviewLabel")}</span>
+                  {t("settingsDialogTabSizePreviewText")}
                 </p>
+              </div>
+            </div>
+          )}
+
+          {tab === "language" && (
+            <div className="space-y-3">
+              <p className="text-xs text-[var(--fg-2)] mb-4">
+                {t("settingsDialogTabLanguageDesc")}
+              </p>
+              <div className="flex flex-col gap-2">
+                {[
+                  { id: "pt", label: t("settingsDialogLanguagePt"), desc: t("settingsDialogLanguagePtDesc"), flag: "🇵🇹" },
+                  { id: "en", label: t("settingsDialogLanguageEn"), desc: t("settingsDialogLanguageEnDesc"), flag: "🇬🇧" }
+                ].map((langOpt) => {
+                  const active = settings.language === langOpt.id;
+                  return (
+                    <button
+                      key={langOpt.id}
+                      onClick={() => handleLanguageChange(langOpt.id as "pt" | "en")}
+                      className={cn(
+                        "flex items-center gap-4 rounded-lg border p-3.5 text-left transition-all duration-100 active:scale-[0.99]",
+                        active
+                          ? "border-[var(--accent)] bg-[var(--accent-bg)]"
+                          : "border-[var(--border)] bg-[var(--bg-3)] hover:border-[var(--border-2)] hover:bg-[var(--bg-4)]"
+                      )}
+                    >
+                      <div
+                        className="flex h-10 w-16 shrink-0 items-center justify-center rounded-md border border-[var(--border)] bg-[var(--bg)] text-xl font-medium"
+                      >
+                        {langOpt.flag}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className={cn("text-sm font-semibold leading-snug", active ? "text-[var(--accent)]" : "text-[var(--fg)]")}>
+                          {langOpt.label}
+                        </p>
+                        <p className="mono text-[11px] text-[var(--fg-2)]">{langOpt.desc}</p>
+                      </div>
+                      {active && <Check size={15} className="shrink-0 text-[var(--accent)]" />}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -250,13 +298,13 @@ export function SettingsDialog({ open, onClose }: Props) {
         {/* Footer */}
         <div className="flex items-center justify-between border-t border-[var(--border)] bg-[var(--bg-3)] px-6 py-3">
           <p className="mono text-[11px] text-[var(--fg-3)]">
-            As definições são guardadas localmente
+            {t("settingsDialogSavedNotice")}
           </p>
           <button
             onClick={onClose}
             className="focus-ring rounded-md border border-[var(--accent)] bg-[var(--accent-bg)] px-4 py-1.5 text-xs font-semibold text-[var(--accent)] transition-all hover:opacity-80 active:scale-95"
           >
-            Concluído
+            {t("done")}
           </button>
         </div>
       </div>

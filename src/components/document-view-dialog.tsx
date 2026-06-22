@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import type { LibraryDocument } from "@/lib/types";
 import { cn, formatBytes, formatRelativeDate, getInitials } from "@/lib/utils";
+import { useLanguage } from "@/lib/language-context";
 
 // ── Discord-like formatting parser ───────────────────────────────────────────
 
@@ -135,6 +136,7 @@ type Props = {
 export function DocumentViewDialog({
   document, open, onClose, isOwner, onEdit, onDeleted
 }: Props) {
+  const { t } = useLanguage();
   const [busy, setBusy] = useState<"view" | "dl" | "del" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmDel, setConfirmDel] = useState(false);
@@ -215,7 +217,7 @@ export function DocumentViewDialog({
       .from("biblioteca")
       .createSignedUrl(document.file_path, 120, mode === "dl" ? { download: document.file_name } : undefined);
     setBusy(null);
-    if (e || !data?.signedUrl) { setError(e?.message ?? "Erro ao criar link seguro."); return; }
+    if (e || !data?.signedUrl) { setError(e?.message ?? t("viewDialogSecureLinkError")); return; }
     window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   }
 
@@ -248,7 +250,7 @@ export function DocumentViewDialog({
         {/* Top bar */}
         <div className="flex items-center justify-between border-b border-[var(--border)] px-6 py-4">
           <div className="flex items-center gap-3">
-            <span className="mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-3)]">Visualização de Recurso</span>
+            <span className="mono text-xs font-semibold uppercase tracking-widest text-[var(--fg-3)]">{t("viewDialogHeader")}</span>
           </div>
           <button disabled={busy !== null} onClick={onClose} className="focus-ring grid h-8 w-8 place-items-center rounded-md text-[var(--fg-3)] hover:bg-[var(--bg-3)] hover:text-[var(--fg)] transition-colors disabled:opacity-40">
             <X size={18} />
@@ -271,10 +273,10 @@ export function DocumentViewDialog({
                     {document.category.name}
                   </Badge>
                 )}
-                {isOwner && <Badge variant="blue">meu material</Badge>}
+                {isOwner && <Badge variant="blue">{t("viewDialogOwnerBadge")}</Badge>}
               </div>
               <p className="mono text-xs text-[var(--fg-3)] truncate" title={document.file_name}>
-                Ficheiro: {document.file_name}
+                {t("viewDialogFileNameLabel")} {document.file_name}
               </p>
             </div>
           </div>
@@ -291,7 +293,7 @@ export function DocumentViewDialog({
                 </span>
               )}
               <div className="min-w-0">
-                <p className="text-xs text-[var(--fg-3)] uppercase tracking-wider font-semibold">Enviado por</p>
+                <p className="text-xs text-[var(--fg-3)] uppercase tracking-wider font-semibold">{t("viewDialogUploadedBy")}</p>
                 <p className="text-sm font-semibold text-[var(--fg)] truncate">{ownerName}</p>
                 <p className="text-[11px] text-[var(--fg-2)] truncate">{document.owner?.email ?? ""}</p>
               </div>
@@ -300,11 +302,11 @@ export function DocumentViewDialog({
             {/* Ficheiro Stats */}
             <div className="grid grid-cols-2 gap-2 border-t border-[var(--border)] pt-3 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-4">
               <div>
-                <p className="text-xs text-[var(--fg-3)] uppercase tracking-wider font-semibold">Tamanho</p>
+                <p className="text-xs text-[var(--fg-3)] uppercase tracking-wider font-semibold">{t("viewDialogSizeLabel")}</p>
                 <p className="text-sm font-medium text-[var(--fg-2)] mono mt-0.5">{formatBytes(document.file_size)}</p>
               </div>
               <div>
-                <p className="text-xs text-[var(--fg-3)] uppercase tracking-wider font-semibold">Data</p>
+                <p className="text-xs text-[var(--fg-3)] uppercase tracking-wider font-semibold">{t("viewDialogDateLabel")}</p>
                 <p className="text-sm font-medium text-[var(--fg-2)] mt-0.5" title={new Date(document.created_at).toLocaleString("pt")}>
                   {formatRelativeDate(document.created_at)}
                 </p>
@@ -315,17 +317,17 @@ export function DocumentViewDialog({
           {/* File Preview Panel */}
           {loadingPreview && (
             <div className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--fg-3)]">Pré-visualização</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--fg-3)]">{t("viewDialogPreviewLabel")}</h3>
               <div className="flex flex-col items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--bg)]/40 p-10 h-64 text-center">
                 <Loader2 size={24} className="animate-spin text-[var(--accent)] mb-2" />
-                <p className="text-xs text-[var(--fg-3)] mono">A carregar pré-visualização segura…</p>
+                <p className="text-xs text-[var(--fg-3)] mono">{t("viewDialogLoadingPreview")}</p>
               </div>
             </div>
           )}
 
           {!loadingPreview && previewUrl && (
             <div className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--fg-3)]">Pré-visualização</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--fg-3)]">{t("viewDialogPreviewLabel")}</h3>
               <div className="rounded-lg border border-[var(--border)] bg-[var(--bg)] overflow-hidden flex items-center justify-center p-1 shadow-inner min-h-[200px] max-h-[360px]">
                 {document.mime_type.toLowerCase().startsWith("image/") ? (
                   <img
@@ -359,21 +361,21 @@ export function DocumentViewDialog({
           {/* Formatted Description Panel */}
           {document.description ? (
             <div className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--fg-3)]">Descrição e Notas</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--fg-3)]">{t("viewDialogDescLabel")}</h3>
               <div className="preview-scroll rounded-lg border border-[var(--border)] bg-[var(--bg)] p-4 max-h-64 overflow-y-auto text-left shadow-inner">
                 {renderDiscordFormat(document.description)}
               </div>
             </div>
           ) : (
             <div className="text-center py-4 rounded-lg border border-dashed border-[var(--border)] bg-[var(--bg)]/40">
-              <p className="text-xs italic text-[var(--fg-3)]">Este material não possui descrição adicional.</p>
+              <p className="text-xs italic text-[var(--fg-3)]">{t("viewDialogNoDesc")}</p>
             </div>
           )}
 
           {/* Tags */}
           {document.tags.length > 0 && (
             <div className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--fg-3)]">Tags Associadas</h3>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--fg-3)]">{t("viewDialogAssociatedTags")}</h3>
               <div className="flex flex-wrap gap-1.5">
                 {document.tags.map((tag) => (
                   <span key={tag} className="mono rounded border border-[var(--border)] bg-[var(--bg)] px-2 py-0.5 text-xs text-[var(--fg-2)] cursor-default">
@@ -398,7 +400,7 @@ export function DocumentViewDialog({
               className="focus-ring flex h-12 items-center justify-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--bg-3)] font-semibold text-[var(--fg)] hover:bg-[var(--bg-4)] hover:border-[var(--border-2)] transition-all disabled:opacity-40 active:scale-[0.99]"
             >
               {busy === "view" ? <Loader2 size={18} className="animate-spin text-[var(--accent)]" /> : <ExternalLink size={18} className="text-[var(--accent)]" />}
-              {busy === "view" ? "A preparar visualização…" : "Abrir e Visualizar"}
+              {busy === "view" ? t("viewDialogPreparingPreview") : t("viewDialogOpenViewBtn")}
             </button>
 
             <button
@@ -407,41 +409,41 @@ export function DocumentViewDialog({
               className="focus-ring flex h-12 items-center justify-center gap-2 rounded-lg border border-[#3fb950] bg-[#1a2d1a] font-semibold text-[#3fb950] hover:bg-[#1e3520] hover:border-[#56d364] transition-all disabled:opacity-40 active:scale-[0.99]"
             >
               {busy === "dl" ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
-              {busy === "dl" ? "A descarregar…" : "Descarregar Ficheiro"}
+              {busy === "dl" ? t("viewDialogDownloadingText") : t("viewDialogDownloadBtn")}
             </button>
           </div>
 
           {/* Owner specific edit/delete row */}
           {isOwner && (
             <div className="flex justify-between items-center bg-[var(--bg)]/40 p-3 rounded-lg border border-[var(--border)] pt-3 mt-4">
-              <span className="text-xs text-[var(--fg-3)] font-medium mono">Gestão de Autor</span>
-              
+              <span className="text-xs text-[var(--fg-3)] font-medium mono">{t("viewDialogAdminSection")}</span>
+
               {!confirmDel ? (
                 <div className="flex gap-2">
                   <Button variant="secondary" size="sm" onClick={onEdit} disabled={busy !== null}>
                     <Edit3 size={14} />
-                    Editar
+                    {t("viewDialogEditBtn")}
                   </Button>
                   <Button variant="danger" size="sm" onClick={() => setConfirmDel(true)} disabled={busy !== null}>
                     <Trash2 size={14} />
-                    Eliminar
+                    {t("viewDialogDeleteBtn")}
                   </Button>
                 </div>
               ) : (
                 <div className="anim-scale-in flex items-center gap-3 rounded-md border border-[var(--red)]/30 bg-[var(--red-bg)] px-3 py-1.5">
-                  <span className="mono text-xs font-semibold text-[var(--red)]">Tem a certeza?</span>
+                  <span className="mono text-xs font-semibold text-[var(--red)]">{t("viewDialogDeleteConfirm")}</span>
                   <div className="flex gap-1.5">
                     <button
                       onClick={doDelete}
                       className="mono rounded border border-[var(--red)]/50 bg-[var(--red)] px-2.5 py-1 text-[11px] font-bold text-white transition-all hover:opacity-80 active:scale-95"
                     >
-                      Sim
+                      {t("viewDialogConfirmYes")}
                     </button>
                     <button
                       onClick={() => setConfirmDel(false)}
                       className="mono rounded px-2.5 py-1 text-[11px] font-medium text-[var(--fg-2)] transition-all hover:text-[var(--fg)] hover:bg-[var(--bg-3)] active:scale-95"
                     >
-                      Não
+                      {t("viewDialogConfirmNo")}
                     </button>
                   </div>
                 </div>

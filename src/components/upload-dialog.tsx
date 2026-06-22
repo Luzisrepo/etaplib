@@ -9,6 +9,7 @@ import { StatusCallout } from "@/components/ui/status-callout";
 import { supabase } from "@/lib/supabase";
 import type { Category } from "@/lib/types";
 import { cn, findBlockedTag, findBlockedWordInText, formatBytes, parseTags, safeFileName, TAG_MAX_CHARS, TAG_MAX_COUNT } from "@/lib/utils";
+import { useLanguage } from "@/lib/language-context";
 
 const MAX = 500 * 1024 * 1024;
 
@@ -22,6 +23,7 @@ type Props = {
 };
 
 export function UploadDialog({ categories, onClose, onUploaded, open, session, initialFile }: Props) {
+  const { t } = useLanguage();
   const [file, setFile]           = useState<File | null>(null);
   const [title, setTitle]         = useState("");
   const [description, setDesc]    = useState("");
@@ -72,7 +74,7 @@ export function UploadDialog({ categories, onClose, onUploaded, open, session, i
   }
 
   async function doUpload(targetFile: File, customTitle: string) {
-    if (targetFile.size > MAX) { setError(`Ficheiro excede ${formatBytes(MAX)}.`); return; }
+    if (targetFile.size > MAX) { setError(t("uploadDialogFileLimitError", { limit: formatBytes(MAX) })); return; }
     setError(null);
     setLoading(true);
     setProgress(5);
@@ -103,19 +105,19 @@ export function UploadDialog({ categories, onClose, onUploaded, open, session, i
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!file) { setError("Seleciona um ficheiro."); return; }
+    if (!file) { setError(t("uploadDialogSelectFileError")); return; }
     // Swear-filter check before upload
     const blocked = findBlockedTag(tagsInput);
-    if (blocked) { setTagError(`A tag "${blocked}" contém linguagem inapropriada e não pode ser usada.`); return; }
+    if (blocked) { setTagError(t("uploadDialogTagSwearError", { blocked })); return; }
     const blockedDesc = findBlockedWordInText(description);
-    if (blockedDesc) { setDescError(`A descrição contém linguagem inapropriada: "${blockedDesc}".`); return; }
+    if (blockedDesc) { setDescError(t("uploadDialogDescSwearError", { blockedDesc })); return; }
     await doUpload(file, title || file.name);
   }
 
   function handleDescChange(val: string) {
     setDesc(val);
     const blocked = findBlockedWordInText(val);
-    setDescError(blocked ? `Linguagem inapropriada detectada: "${blocked}".` : null);
+    setDescError(blocked ? t("uploadDialogDescSwearError", { blockedDesc: blocked }) : null);
   }
 
   function handleTagsChange(val: string) {
@@ -124,11 +126,11 @@ export function UploadDialog({ categories, onClose, onUploaded, open, session, i
     // Live check for blocked words
     const blocked = findBlockedTag(val);
     if (blocked) {
-      setTagError(`A tag "${blocked}" contém linguagem inapropriada.`);
+      setTagError(t("uploadDialogTagLiveSwearError", { blocked }));
     } else {
       // Warn about individual tags that exceed character limit
       const tooLong = val.split(",").map(t => t.trim()).find(t => t.length > TAG_MAX_CHARS);
-      if (tooLong) setTagError(`A tag "${tooLong.slice(0, 20)}…" excede o limite de ${TAG_MAX_CHARS} caracteres.`);
+      if (tooLong) setTagError(t("uploadDialogTagTooLongError", { tooLong: tooLong.slice(0, 20) + "…", maxChars: TAG_MAX_CHARS }));
     }
   }
 
@@ -147,8 +149,8 @@ export function UploadDialog({ categories, onClose, onUploaded, open, session, i
               <FileUp size={18} />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-[var(--fg)]">Novo material</h2>
-              <p className="mono text-xs text-[var(--fg-2)]">máx. 500 MB</p>
+              <h2 className="text-base font-semibold text-[var(--fg)]">{t("uploadDialogHeader")}</h2>
+              <p className="mono text-xs text-[var(--fg-2)]">{t("uploadDialogLimitText")}</p>
             </div>
           </div>
           <button disabled={loading} onClick={onClose} className="focus-ring grid h-8 w-8 place-items-center rounded-md text-[var(--fg-3)] hover:bg-[var(--bg-3)] hover:text-[var(--fg)] transition-colors disabled:opacity-40">
@@ -183,49 +185,49 @@ export function UploadDialog({ categories, onClose, onUploaded, open, session, i
                   onClick={(e) => { e.stopPropagation(); setFile(null); setTitle(""); }}
                   className="mono text-xs font-medium text-[var(--fg-2)] hover:text-[var(--red)] transition-colors mt-2"
                 >
-                  trocar ficheiro
+                  {t("uploadDialogChangeFile")}
                 </button>
               </>
             ) : (
               <>
                 <Upload size={28} className={dragging ? "text-[var(--accent)]" : "text-[var(--fg-3)]"} />
-                <p className="text-sm font-medium text-[var(--fg-2)]">Arrastar ou <span className="text-[var(--accent)]">escolher ficheiro</span></p>
-                <p className="mono text-xs text-[var(--fg-3)]">PDF · vídeo · apresentação · imagem · zip</p>
+                <p className="text-sm font-medium text-[var(--fg-2)]">{t("uploadDialogDragOrChoose")}</p>
+                <p className="mono text-xs text-[var(--fg-3)]">{t("uploadDialogSupportedFormats")}</p>
               </>
             )}
           </div>
 
           {/* Fields */}
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Título" required>
-              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex: Redes — Aula 04" required />
+            <Field label={t("uploadDialogFieldTitle")} required>
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t("uploadDialogFieldTitlePlaceholder")} required />
             </Field>
-            <Field label="Categoria">
+            <Field label={t("uploadDialogFieldCategory")}>
               <Select value={categoryId} onChange={(e) => setCat(e.target.value)}>
-                <option value="">Sem categoria</option>
+                <option value="">{t("uploadDialogFieldCategoryNone")}</option>
                 {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </Select>
             </Field>
           </div>
 
-          <Field label="Descrição">
+          <Field label={t("uploadDialogFieldDescription")}>
             <Textarea
               value={description}
               onChange={(e) => handleDescChange(e.target.value)}
-              placeholder="Resumo para ajudar colegas a encontrar o ficheiro…"
+              placeholder={t("uploadDialogFieldDescriptionPlaceholder")}
               className={descError ? "border-[var(--red)] focus:border-[var(--red)]" : ""}
             />
             {descError && <p className="mono text-[11px] font-medium text-[var(--red)] mt-1">{descError}</p>}
           </Field>
 
-          <Field label="Tags" hint="Separadas por vírgulas.">
+          <Field label={t("uploadDialogFieldTags")} hint={t("uploadDialogFieldTagsHint")}>
             <div className="relative">
               <Tag size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--fg-3)]" />
               <Input
                 className={cn("pl-10", tagError && "border-[var(--red)] focus:border-[var(--red)]")}
                 value={tagsInput}
                 onChange={(e) => handleTagsChange(e.target.value)}
-                placeholder="redes, modulo-3, exame"
+                placeholder={t("uploadDialogFieldTagsPlaceholder")}
               />
             </div>
             {/* Tag stats row */}
@@ -234,7 +236,7 @@ export function UploadDialog({ categories, onClose, onUploaded, open, session, i
                 <p className="mono text-[11px] font-medium text-[var(--red)]">{tagError}</p>
               ) : (
                 <p className="mono text-[11px] text-[var(--fg-3)]">
-                  Cada tag: máx. {TAG_MAX_CHARS} chars · máx. {TAG_MAX_COUNT} tags
+                  {t("uploadDialogTagsHintText", { maxChars: TAG_MAX_CHARS, maxCount: TAG_MAX_COUNT })}
                 </p>
               )}
               <p className="mono text-[11px] text-[var(--fg-3)] shrink-0">
@@ -252,7 +254,7 @@ export function UploadDialog({ categories, onClose, onUploaded, open, session, i
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <p className="mono text-[11px] font-medium text-[var(--fg-2)]">{done ? "concluído!" : `a enviar… ${progress}%`}</p>
+              <p className="mono text-[11px] font-medium text-[var(--fg-2)]">{done ? t("uploadDialogDoneProgress") : t("uploadDialogUploadingProgress", { progress })}</p>
             </div>
           )}
 
@@ -260,10 +262,10 @@ export function UploadDialog({ categories, onClose, onUploaded, open, session, i
 
           {/* Footer */}
           <div className="flex items-center justify-end gap-3 border-t border-[var(--border)] pt-5">
-            <Button disabled={loading} onClick={onClose} variant="ghost" size="md">Cancelar</Button>
+            <Button disabled={loading} onClick={onClose} variant="ghost" size="md">{t("cancel")}</Button>
             <Button disabled={loading || done || !!tagError || !!descError} type="submit" variant="primary" size="md">
               {loading ? <Loader2 size={16} className="animate-spin" /> : <FileUp size={16} />}
-              {loading ? (done ? "Concluído" : "A enviar…") : "Enviar material"}
+              {loading ? (done ? t("uploadDialogDoneBtnText") : t("uploadDialogUploadingBtnText")) : t("uploadDialogUploadBtnText")}
             </Button>
           </div>
         </form>

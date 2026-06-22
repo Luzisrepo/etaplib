@@ -8,6 +8,7 @@ import { StatusCallout } from "@/components/ui/status-callout";
 import { supabase } from "@/lib/supabase";
 import type { Profile } from "@/lib/types";
 import { getInitials } from "@/lib/utils";
+import { useLanguage } from "@/lib/language-context";
 
 const MAX_AVATAR = 2 * 1024 * 1024; // 2 MB
 const ACCEPTED = "image/png,image/jpeg,image/gif,image/webp";
@@ -20,6 +21,7 @@ type Props = {
 };
 
 export function ProfileEditorDialog({ open, onClose, profile, onSaved }: Props) {
+  const { t } = useLanguage();
   const [fullName, setFullName] = useState("");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -50,11 +52,11 @@ export function ProfileEditorDialog({ open, onClose, profile, onSaved }: Props) 
   function handleFileChange(f: File | null) {
     if (!f) return;
     if (f.size > MAX_AVATAR) {
-      setError("A imagem não pode exceder 2 MB.");
+      setError(t("profileEditorAvatarLimitError"));
       return;
     }
     if (!f.type.startsWith("image/")) {
-      setError("Ficheiro inválido. Usa PNG, JPEG, GIF ou WebP.");
+      setError(t("profileEditorAvatarInvalidFormat"));
       return;
     }
     setError(null);
@@ -156,7 +158,7 @@ export function ProfileEditorDialog({ open, onClose, profile, onSaved }: Props) 
               <User size={18} />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-[var(--fg)]">Editar perfil</h2>
+              <h2 className="text-base font-semibold text-[var(--fg)]">{t("profileEditorHeader")}</h2>
               <p className="mono text-xs text-[var(--fg-2)]">{profile.email}</p>
             </div>
           </div>
@@ -208,35 +210,35 @@ export function ProfileEditorDialog({ open, onClose, profile, onSaved }: Props) 
               disabled={loading}
               className="mono text-xs font-medium text-[var(--accent)] hover:underline transition-colors disabled:opacity-40"
             >
-              {displayAvatar ? "trocar imagem" : "adicionar imagem"}
+              {displayAvatar ? t("profileEditorAvatarChange") : t("profileEditorAvatarAdd")}
             </button>
           </div>
 
           {/* Display name */}
-          <Field label="Nome de exibição">
+          <Field label={t("profileEditorFieldDisplayName")}>
             <Input
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder="O teu nome"
+              placeholder={t("profileEditorFieldDisplayNamePlaceholder")}
               disabled={loading}
             />
           </Field>
 
           {/* Role badge (read-only) */}
           <div className="flex items-center gap-3 rounded-md border border-[var(--border)] bg-[var(--bg)] px-4 py-3">
-            <span className="mono text-xs text-[var(--fg-2)]">Cargo:</span>
+            <span className="mono text-xs text-[var(--fg-2)]">{t("profileEditorFieldRole")}</span>
             <span className="mono text-xs font-bold text-[var(--fg)] uppercase">{profile.role}</span>
           </div>
 
           {error && <StatusCallout kind="error">{error}</StatusCallout>}
-          {success && <StatusCallout kind="success">Perfil atualizado!</StatusCallout>}
+          {success && <StatusCallout kind="success">{t("profileEditorSuccessMessage")}</StatusCallout>}
 
           {/* Footer */}
           <div className="flex items-center justify-end gap-3 border-t border-[var(--border)] pt-6">
-            <Button disabled={loading} onClick={onClose} variant="ghost" size="md">Cancelar</Button>
+            <Button disabled={loading} onClick={onClose} variant="ghost" size="md">{t("cancel")}</Button>
             <Button disabled={loading || success} type="submit" variant="primary" size="md">
               {loading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-              {loading ? "A guardar…" : "Guardar alterações"}
+              {loading ? t("editDialogSavingBtnText") : t("editDialogSaveBtnText")}
             </Button>
           </div>
         </form>

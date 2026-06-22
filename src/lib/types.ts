@@ -1,9 +1,11 @@
+export type Role = "member" | "teacher" | "admin";
+
 export type Profile = {
   id: string;
   email: string;
   full_name: string | null;
   avatar_url: string | null;
-  role: "member" | "teacher" | "admin";
+  role: Role;
   created_at: string;
   updated_at: string;
 };
@@ -37,6 +39,14 @@ export type LibraryDocument = DocumentRow & {
   owner: Pick<Profile, "id" | "email" | "full_name" | "avatar_url"> | null;
 };
 
+export type Invite = {
+  email: string;
+  role: string;
+  granted_by: string;
+  granted_at: string;
+  granted_by_profile: { email: string; full_name: string } | null;
+};
+
 export type UploadPayload = {
   file: File;
   title: string;
@@ -44,3 +54,6 @@ export type UploadPayload = {
   categoryId: string | null;
   tags: string[];
 };
+
+/** Profile with a document count, as returned by `fetchUsers`. */
+export type UserWithMeta = Profile & { doc_count: number };

@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { FileUp, Upload, X } from "lucide-react";
+import { AdminPanel } from "@/components/admin-panel";
 import { DocumentCard } from "@/components/document-card";
 import { DocumentViewDialog } from "@/components/document-view-dialog";
 import { EditDocumentDialog } from "@/components/edit-document-dialog";
+import { GrantRoleDialog } from "@/components/grant-role-dialog";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
 import { UploadDialog } from "@/components/upload-dialog";
@@ -17,8 +19,10 @@ import { StatusCallout } from "@/components/ui/status-callout";
 import { supabase } from "@/lib/supabase";
 import type { Category, LibraryDocument, Profile } from "@/lib/types";
 import { formatBytes } from "@/lib/utils";
+import { useLanguage } from "@/lib/language-context";
 
 export function Dashboard({ session }: { session: Session }) {
+  const { t } = useLanguage();
   const [documents, setDocuments]       = useState<LibraryDocument[]>([]);
   const [categories, setCategories]     = useState<Category[]>([]);
   const [profile, setProfile]           = useState<Profile | null>(null);
@@ -32,6 +36,8 @@ export function Dashboard({ session }: { session: Session }) {
   const [sidebarOpen, setSidebarOpen]   = useState(false);
   const [profileOpen, setProfileOpen]   = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [adminOpen, setAdminOpen]       = useState(false);
+  const [grantOpen, setGrantOpen]       = useState(false);
   const [isWindowDragging, setIsWindowDragging] = useState(false);
   const [draggedFile, setDraggedFile] = useState<File | null>(null);
   const [maximizedDoc, setMaximizedDoc] = useState<LibraryDocument | null>(null);
@@ -135,8 +141,8 @@ export function Dashboard({ session }: { session: Session }) {
   const hasFilters = !!(query || activeCategory !== "all" || activeTag !== "all");
 
   const currentCatName = activeCategory === "all"
-    ? "Todos os materiais"
-    : categories.find(c => c.id === activeCategory)?.name ?? "Materiais";
+    ? t("dashboardAllMaterialsHeader")
+    : categories.find(c => c.id === activeCategory)?.name ?? t("dashboardDefaultHeader");
 
   return (
     <div className="min-h-screen text-[var(--fg)]">
@@ -150,6 +156,8 @@ export function Dashboard({ session }: { session: Session }) {
         onTagChange={t => { setActiveTag(t); setSidebarOpen(false); }}
         onSignOut={() => supabase.auth.signOut()}
         onEditProfile={() => setProfileOpen(true)}
+        onAdmin={() => setAdminOpen(true)}
+        onGrantRole={() => setGrantOpen(true)}
         session={session}
         profile={profile}
         stats={stats}
@@ -188,7 +196,7 @@ export function Dashboard({ session }: { session: Session }) {
                 onClick={() => { setQuery(""); setActiveCategory("all"); setActiveTag("all"); }}
                 className="mono flex items-center gap-1.5 rounded-md border border-[var(--border)] px-2.5 py-1.5 text-[11px] text-[var(--fg-2)] transition-all hover:border-[var(--border-2)] hover:text-[var(--fg)] active:scale-95 anim-fade-in"
               >
-                <X size={12} /> limpar
+                <X size={12} /> {t("dashboardClearFilters")}
               </button>
             )}
           </div>
@@ -221,18 +229,18 @@ export function Dashboard({ session }: { session: Session }) {
 
               {/* Row count footer */}
               <p className="mono pt-6 text-center text-xs text-[var(--fg-2)]">
-                {filtered.length} {filtered.length === 1 ? "documento" : "documentos"}
-                {hasFilters && ` de ${documents.length}`}
+                {filtered.length} {filtered.length === 1 ? t("dashboardFilteredCountSingle") : t("dashboardFilteredCount")}
+                {hasFilters && ` ${t("dashboardOfText")} ${documents.length}`}
               </p>
             </div>
           ) : (
             <EmptyState
-              title="Nenhum documento"
-              description={hasFilters ? "Nenhum resultado para os filtros." : "Sê o primeiro a partilhar."}
+              title={t("dashboardEmptyTitle")}
+              description={hasFilters ? t("dashboardEmptyDescFilters") : t("dashboardEmptyDescNoMaterials")}
               action={
                 hasFilters
-                  ? <Button onClick={() => { setQuery(""); setActiveCategory("all"); setActiveTag("all"); }}>Limpar filtros</Button>
-                  : <Button variant="primary" onClick={() => setUploadOpen(true)}><FileUp size={16} />Enviar material</Button>
+                  ? <Button onClick={() => { setQuery(""); setActiveCategory("all"); setActiveTag("all"); }}>{t("dashboardEmptyBtnClear")}</Button>
+                  : <Button variant="primary" onClick={() => setUploadOpen(true)}><FileUp size={16} />{t("dashboardEmptyBtnUpload")}</Button>
               }
             />
           )}
@@ -270,12 +278,12 @@ export function Dashboard({ session }: { session: Session }) {
             <div className="grid h-16 w-16 place-items-center rounded-2xl border border-[var(--accent)] bg-[var(--bg)] text-[var(--accent)] shadow-lg animate-bounce">
               <Upload size={32} />
             </div>
-            <h2 className="text-xl font-bold text-[var(--fg)]">Largar para Enviar</h2>
+            <h2 className="text-xl font-bold text-[var(--fg)]">{t("dashboardDragOverlayTitle")}</h2>
             <p className="text-sm text-[var(--fg-2)] leading-relaxed">
-              Solte o seu ficheiro em qualquer parte do ecrã para iniciar o carregamento automático imediato!
+              {t("dashboardDragOverlayDesc")}
             </p>
             <span className="mono text-[10px] uppercase tracking-wider text-[var(--fg-3)]">
-              limite regulamentar de 500 MB
+              {t("dashboardDragOverlayLimit")}
             </span>
           </div>
         </div>
@@ -295,13 +303,24 @@ export function Dashboard({ session }: { session: Session }) {
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
       />
+      <AdminPanel
+        open={adminOpen}
+        onClose={() => setAdminOpen(false)}
+        session={session}
+      />
+      <GrantRoleDialog
+        open={grantOpen}
+        onClose={() => setGrantOpen(false)}
+        onGranted={() => { setGrantOpen(false); silentRefresh(); }}
+      />
     </div>
   );
 }
 
 function Skeleton() {
+  const { t } = useLanguage();
   return (
-    <div className="space-y-3" aria-busy="true" aria-label="A carregar">
+    <div className="space-y-3" aria-busy="true" aria-label={t("dashboardLoadingText")}>
       {Array.from({ length: 6 }).map((_, i) => (
         <div
           key={i}

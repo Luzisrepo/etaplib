@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import type { LibraryDocument } from "@/lib/types";
 import { cn, formatBytes, formatRelativeDate, getInitials } from "@/lib/utils";
+import { useLanguage } from "@/lib/language-context";
 
 type Props = {
   document: LibraryDocument;
@@ -21,6 +22,7 @@ type Props = {
 };
 
 export function DocumentCard({ document, isOwner, onDeleted, onEdit, onSelect }: Props) {
+  const { t } = useLanguage();
   const [busy, setBusy] = useState<"view" | "dl" | "del" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmDel, setConfirmDel] = useState(false);
@@ -35,7 +37,7 @@ export function DocumentCard({ document, isOwner, onDeleted, onEdit, onSelect }:
       .from("biblioteca")
       .createSignedUrl(document.file_path, 120, mode === "dl" ? { download: document.file_name } : undefined);
     setBusy(null);
-    if (e || !data?.signedUrl) { setError(e?.message ?? "Erro ao criar link."); return; }
+    if (e || !data?.signedUrl) { setError(e?.message ?? t("docCardLinkError")); return; }
     window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   }
 
@@ -96,7 +98,7 @@ export function DocumentCard({ document, isOwner, onDeleted, onEdit, onSelect }:
                 {document.category.name}
               </Badge>
             )}
-            {isOwner && <Badge variant="blue">meu</Badge>}
+            {isOwner && <Badge variant="blue">{t("docCardOwnerBadge")}</Badge>}
           </div>
 
           {document.description && (
@@ -148,22 +150,22 @@ export function DocumentCard({ document, isOwner, onDeleted, onEdit, onSelect }:
           {!confirmDel ? (
             <>
               <ActionBtn
-                label={busy === "view" ? "…" : "Ver"}
+                label={busy === "view" ? "…" : t("docCardActionView")}
                 icon={busy === "view" ? <Loader2 size={14} className="animate-spin" /> : <ExternalLink size={14} />}
                 disabled={busy !== null}
                 onClick={() => openUrl("view")}
               />
               <ActionBtn
-                label="DL"
+                label={t("docCardActionDownload")}
                 icon={busy === "dl" ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
                 disabled={busy !== null}
                 onClick={() => openUrl("dl")}
               />
               {isOwner && (
                 <>
-                  <ActionBtn label="Edit" icon={<Edit3 size={14} />} disabled={busy !== null} onClick={onEdit} />
+                  <ActionBtn label={t("docCardActionEdit")} icon={<Edit3 size={14} />} disabled={busy !== null} onClick={onEdit} />
                   <ActionBtn
-                    label="Del"
+                    label={t("docCardActionDelete")}
                     icon={<Trash2 size={14} />}
                     disabled={busy !== null}
                     onClick={() => setConfirmDel(true)}
@@ -174,19 +176,19 @@ export function DocumentCard({ document, isOwner, onDeleted, onEdit, onSelect }:
             </>
           ) : (
             <div className="anim-scale-in flex flex-col items-center gap-2 rounded-md border border-[var(--red)]/30 bg-[var(--red-bg)] p-2">
-              <span className="mono text-xs font-semibold text-[var(--red)]">eliminar?</span>
+              <span className="mono text-xs font-semibold text-[var(--red)]">{t("docCardDeleteConfirm")}</span>
               <div className="flex gap-2">
                 <button
                   onClick={doDelete}
                   className="mono rounded border border-[var(--red)]/50 bg-[var(--red)] px-3 py-1 text-[11px] font-bold text-white transition-all hover:opacity-80 active:scale-95"
                 >
-                  sim
+                  {t("docCardDeleteConfirmYes")}
                 </button>
                 <button
                   onClick={() => setConfirmDel(false)}
                   className="mono rounded px-3 py-1 text-[11px] font-medium text-[var(--fg-2)] transition-all hover:text-[var(--fg)] hover:bg-[var(--bg-3)] active:scale-95"
                 >
-                  não
+                  {t("docCardDeleteConfirmNo")}
                 </button>
               </div>
             </div>

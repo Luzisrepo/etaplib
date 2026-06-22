@@ -33,16 +33,20 @@ export type FontId =
 
 export type FontSize = "sm" | "md" | "lg" | "xl";
 
+export type LanguageId = "pt" | "en";
+
 export interface AppSettings {
   theme: ThemeId;
   font: FontId;
   fontSize: FontSize;
+  language: LanguageId;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: "etap-default",
   font: "inter",
   fontSize: "md",
+  language: "pt",
 };
 
 const LS_KEY = "etap-settings-v1";

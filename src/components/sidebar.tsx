@@ -2,8 +2,9 @@
 
 import type { Session } from "@supabase/supabase-js";
 import type { ReactNode } from "react";
-import { BookMarked, ChevronRight, Files, HardDrive, LogOut, X } from "lucide-react";
+import { BookMarked, ChevronRight, Files, HardDrive, LogOut, ShieldCheck, UserPlus, X } from "lucide-react";
 import type { Category, Profile } from "@/lib/types";
+import { isAdminEmail, isStaff, ROLE_LABELS } from "@/lib/admin";
 import { cn, getInitials } from "@/lib/utils";
 
 type Props = {
@@ -16,18 +17,24 @@ type Props = {
   onTagChange: (t: string) => void;
   onSignOut: () => void;
   onEditProfile: () => void;
+  onAdmin: () => void;
+  onGrantRole: () => void;
   session: Session;
   profile: Profile | null;
   stats: { total: number; mine: number; totalSize: string; categories: number };
   tags: string[];
 };
 
-export function Sidebar({ activeCategory, activeTag, categories, isOpen, onCategoryChange, onClose, onTagChange, onSignOut, onEditProfile, session, profile, stats, tags }: Props) {
+export function Sidebar({ activeCategory, activeTag, categories, isOpen, onCategoryChange, onClose, onTagChange, onSignOut, onEditProfile, onAdmin, onGrantRole, session, profile, stats, tags }: Props) {
   const email = profile?.email || session.user.email || "user@etap.pt";
   const fullName = profile?.full_name || session.user.user_metadata?.full_name || "";
   const displayName = fullName || email.split("@")[0];
   const initials = getInitials(email, fullName);
   const avatarUrl = profile?.avatar_url;
+  const role = profile?.role ?? "member";
+  const showAdmin = isAdminEmail(session.user.email);
+  const showGrant = isStaff(role);
+  const showManagement = showAdmin || showGrant;
 
   return (
     <>
@@ -70,7 +77,19 @@ export function Sidebar({ activeCategory, activeTag, categories, isOpen, onCateg
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-[var(--fg)] leading-snug">{displayName}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="truncate text-sm font-semibold text-[var(--fg)] leading-snug">{displayName}</p>
+                {role !== "member" && (
+                  <span className={cn(
+                    "mono shrink-0 rounded border px-1.5 py-0.5 text-[9px] font-bold leading-none uppercase tracking-wide",
+                    role === "admin"
+                      ? "border-[var(--red)]/30 bg-[var(--red-bg)] text-[var(--red)]"
+                      : "border-[var(--purple)]/30 bg-[var(--bg-4)] text-[var(--purple)]"
+                  )}>
+                    {ROLE_LABELS[role]}
+                  </span>
+                )}
+              </div>
               <p className="mono truncate text-[11px] text-[var(--fg-2)]">{email}</p>
             </div>
           </button>
@@ -124,6 +143,27 @@ export function Sidebar({ activeCategory, activeTag, categories, isOpen, onCateg
                   <TagChip key={t} active={activeTag === t} label={t} onClick={() => onTagChange(t)} />
                 ))}
               </div>
+            </Section>
+          )}
+
+          {showManagement && (
+            <Section label="Gestão">
+              {showAdmin && (
+                <NavRow
+                  active={false}
+                  icon={<ShieldCheck size={16} />}
+                  label="Administração"
+                  onClick={() => { onAdmin(); onClose(); }}
+                />
+              )}
+              {showGrant && (
+                <NavRow
+                  active={false}
+                  icon={<UserPlus size={16} />}
+                  label="Conceder acessos"
+                  onClick={() => { onGrantRole(); onClose(); }}
+                />
+              )}
             </Section>
           )}
         </nav>
