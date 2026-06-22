@@ -41,7 +41,7 @@ export function AuthPanel() {
 
   return (
     <main
-      className="relative min-h-screen overflow-hidden"
+      className="relative z-10 min-h-screen overflow-hidden"
       style={{
         "--bg":        "#0d1117",
         "--bg-2":      "#161b22",

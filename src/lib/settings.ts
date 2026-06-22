@@ -22,7 +22,13 @@ export type ThemeId =
   | "nebula"
   | "inferno"
   | "arctic"
-  | "venom";
+  | "venom"
+  // ── Effect themes (animated canvas backgrounds)
+  | "constellation"
+  | "starfield"
+  | "matrix"
+  | "aurora-flow"
+  | "plasma";
 
 export type FontId =
   | "inter"
@@ -35,11 +41,59 @@ export type FontSize = "sm" | "md" | "lg" | "xl";
 
 export type LanguageId = "pt" | "en";
 
+// ── Effect theme engine ──────────────────────────────────────────────────────
+
+/** Identifies which canvas renderer runs for an effect theme. */
+export type EffectType =
+  | "constellation"
+  | "starfield"
+  | "matrix"
+  | "aurora-flow"
+  | "plasma";
+
+/** Tunable parameters supplied to the renderer from the active theme. */
+export interface EffectConfig {
+  type: EffectType;
+  /** Palette of CSS colors the renderer draws with (hex or rgba). */
+  colors: string[];
+  /** Base density multiplier before the user's particleDensity is applied. */
+  baseDensity?: number;
+}
+
+// ── QOL / accessibility options ──────────────────────────────────────────────
+
+export type ParticleDensity = "low" | "med" | "high";
+
+export interface EffectSettings {
+  /** Disables every CSS + canvas animation. Honored app-wide. */
+  reduceMotion: boolean;
+  /** Multiplier applied to rAF dt and CSS animation-duration. 0.5–2. */
+  animationSpeed: number;
+  /** Scales canvas particle counts; helps weak GPUs. */
+  particleDensity: ParticleDensity;
+  /** backdrop-filter blur applied to gp-* panels (px). 0–24. */
+  panelBlur: number;
+  /** Opacity of the readability overlay above the background (0–0.8). */
+  backgroundDim: number;
+  /** Render the background effect behind the landing/auth page too. */
+  showOnLanding: boolean;
+}
+
+export const DEFAULT_EFFECTS: EffectSettings = {
+  reduceMotion: false,
+  animationSpeed: 1,
+  particleDensity: "med",
+  panelBlur: 16,
+  backgroundDim: 0.35,
+  showOnLanding: false,
+};
+
 export interface AppSettings {
   theme: ThemeId;
   font: FontId;
   fontSize: FontSize;
   language: LanguageId;
+  effects: EffectSettings;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -47,6 +101,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   font: "inter",
   fontSize: "md",
   language: "pt",
+  effects: DEFAULT_EFFECTS,
 };
 
 const LS_KEY = "etap-settings-v1";
@@ -56,7 +111,14 @@ export function loadSettings(): AppSettings {
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return DEFAULT_SETTINGS;
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw);
+    // Deep-merge `effects` so partially-stored (or older) settings still
+    // resolve to the full set of defaults.
+    return {
+      ...DEFAULT_SETTINGS,
+      ...parsed,
+      effects: { ...DEFAULT_EFFECTS, ...(parsed?.effects ?? {}) },
+    };
   } catch {
     return DEFAULT_SETTINGS;
   }
@@ -73,15 +135,30 @@ export function saveSettings(s: AppSettings): void {
 
 // ── Theme definitions ───────────────────────────────────────────────────────
 
+/** Coarse grouping used by the settings dialog to organize theme cards. */
+export type ThemeCategory = "standard" | "gradient" | "effect";
+
 export interface ThemeDef {
   id: ThemeId;
   label: string;
   description: string;
   swatch: string;        // accent preview color
   bgSwatch: string;      // background preview color
+  /** Coarse category — derived from experimental/bodyGradient/effect if omitted. */
+  category?: ThemeCategory;
   experimental?: boolean; // shows in experimental section
   bodyGradient?: string;  // if set, applied to body background (gradient themes)
+  /** If set, this theme renders an animated canvas background. */
+  effect?: EffectConfig;
   vars: Record<string, string>;
+}
+
+/** Resolve a theme's category from its flags (falls back to "standard"). */
+export function themeCategory(t: ThemeDef): ThemeCategory {
+  if (t.category) return t.category;
+  if (t.effect) return "effect";
+  if (t.bodyGradient || t.experimental) return "gradient";
+  return "standard";
 }
 
 export const THEMES: ThemeDef[] = [
@@ -637,6 +714,179 @@ export const THEMES: ThemeDef[] = [
       "--purple":    "#00ff88",
     },
   },
+  // ── Effect themes (animated canvas backgrounds) ──────────────────────────────
+  // Panels keep using the CSS-var palette below; the BackgroundCanvas component
+  // reads `effect` to pick its renderer and `effect.colors` for its palette.
+  {
+    id: "constellation",
+    label: "Constellation",
+    description: "Linked particle network reacting to cursor",
+    swatch: "#7dd3fc",
+    bgSwatch: "#070b18",
+    category: "effect",
+    effect: {
+      type: "constellation",
+      colors: ["#7dd3fc", "#38bdf8", "#a78bfa", "#e0e7ff"],
+      baseDensity: 1,
+    },
+    vars: {
+      "--bg":        "#070b18",
+      "--bg-2":      "#0c1326",
+      "--bg-3":      "#111a32",
+      "--bg-4":      "#16203f",
+      "--border":    "#1f2d4d",
+      "--border-2":  "#2c3f6a",
+      "--fg":        "#e6f0ff",
+      "--fg-2":      "#93b4d8",
+      "--fg-3":      "#3e5a82",
+      "--accent":    "#7dd3fc",
+      "--accent-2":  "#38bdf8",
+      "--accent-bg": "#0c2236",
+      "--green":     "#34d399",
+      "--green-bg":  "#04241c",
+      "--red":       "#f87171",
+      "--red-bg":    "#280c0c",
+      "--amber":     "#fbbf24",
+      "--amber-bg":  "#281c04",
+      "--purple":    "#a78bfa",
+    },
+  },
+  {
+    id: "starfield",
+    label: "Starfield",
+    description: "Hyperspace warp through drifting stars",
+    swatch: "#f5f5ff",
+    bgSwatch: "#02030a",
+    category: "effect",
+    effect: {
+      type: "starfield",
+      colors: ["#ffffff", "#c7d2fe", "#a5b4fc", "#7dd3fc"],
+      baseDensity: 1.4,
+    },
+    vars: {
+      "--bg":        "#02030a",
+      "--bg-2":      "#070a18",
+      "--bg-3":      "#0c1126",
+      "--bg-4":      "#121834",
+      "--border":    "#1a2143",
+      "--border-2":  "#262f63",
+      "--fg":        "#eef2ff",
+      "--fg-2":      "#9aa6cc",
+      "--fg-3":      "#3a4773",
+      "--accent":    "#a5b4fc",
+      "--accent-2":  "#818cf8",
+      "--accent-bg": "#0e1438",
+      "--green":     "#34d399",
+      "--green-bg":  "#04241c",
+      "--red":       "#f87171",
+      "--red-bg":    "#280c0c",
+      "--amber":     "#fbbf24",
+      "--amber-bg":  "#281c04",
+      "--purple":    "#c4b5fd",
+    },
+  },
+  {
+    id: "matrix",
+    label: "Matrix Rain",
+    description: "Cascading digital glyph columns",
+    swatch: "#39ff14",
+    bgSwatch: "#020602",
+    category: "effect",
+    effect: {
+      type: "matrix",
+      colors: ["#39ff14", "#00cc44", "#aaffaa", "#1a3a1a"],
+      baseDensity: 1,
+    },
+    vars: {
+      "--bg":        "#020602",
+      "--bg-2":      "#040d04",
+      "--bg-3":      "#071607",
+      "--bg-4":      "#0a200a",
+      "--border":    "#0f3010",
+      "--border-2":  "#154518",
+      "--fg":        "#d8ffd8",
+      "--fg-2":      "#7ad98a",
+      "--fg-3":      "#2f6a3a",
+      "--accent":    "#39ff14",
+      "--accent-2":  "#22cc00",
+      "--accent-bg": "#061506",
+      "--green":     "#39ff14",
+      "--green-bg":  "#041404",
+      "--red":       "#ff6b6b",
+      "--red-bg":    "#200808",
+      "--amber":     "#ccff00",
+      "--amber-bg":  "#1a1e04",
+      "--purple":    "#00ff88",
+    },
+  },
+  {
+    id: "aurora-flow",
+    label: "Aurora Flow",
+    description: "Flowing multi-band aurora ribbons",
+    swatch: "#2dd4bf",
+    bgSwatch: "#04101c",
+    category: "effect",
+    effect: {
+      type: "aurora-flow",
+      colors: ["#2dd4bf", "#38bdf8", "#a78bfa", "#34d399", "#22d3ee"],
+      baseDensity: 1,
+    },
+    vars: {
+      "--bg":        "#04101c",
+      "--bg-2":      "#08182b",
+      "--bg-3":      "#0c2038",
+      "--bg-4":      "#102a47",
+      "--border":    "#143352",
+      "--border-2":  "#1e4773",
+      "--fg":        "#e0f7ff",
+      "--fg-2":      "#7fc8d8",
+      "--fg-3":      "#3a6a78",
+      "--accent":    "#2dd4bf",
+      "--accent-2":  "#14b8a6",
+      "--accent-bg": "#062a26",
+      "--green":     "#34d399",
+      "--green-bg":  "#04241c",
+      "--red":       "#f87171",
+      "--red-bg":    "#280c0c",
+      "--amber":     "#fbbf24",
+      "--amber-bg":  "#281c04",
+      "--purple":    "#c084fc",
+    },
+  },
+  {
+    id: "plasma",
+    label: "Plasma",
+    description: "Soft flowing plasma colour blobs",
+    swatch: "#e879f9",
+    bgSwatch: "#0a0518",
+    category: "effect",
+    effect: {
+      type: "plasma",
+      colors: ["#e879f9", "#818cf8", "#38bdf8", "#f472b6", "#a78bfa"],
+      baseDensity: 1,
+    },
+    vars: {
+      "--bg":        "#0a0518",
+      "--bg-2":      "#120a28",
+      "--bg-3":      "#1a1038",
+      "--bg-4":      "#221648",
+      "--border":    "#2c1f5c",
+      "--border-2":  "#3e2d7e",
+      "--fg":        "#f3e8ff",
+      "--fg-2":      "#c4b0e0",
+      "--fg-3":      "#6a548e",
+      "--accent":    "#e879f9",
+      "--accent-2":  "#d946ef",
+      "--accent-bg": "#260a3a",
+      "--green":     "#34d399",
+      "--green-bg":  "#04241c",
+      "--red":       "#f87171",
+      "--red-bg":    "#280c0c",
+      "--amber":     "#fbbf24",
+      "--amber-bg":  "#281c04",
+      "--purple":    "#c4b5fd",
+    },
+  },
 ];
 
 // ── Font definitions ─────────────────────────────────────────────────────────
@@ -728,22 +978,35 @@ export function applySettings(s: AppSettings): void {
   // takes effect immediately without waiting for a CSS var cascade repaint.
   // Gradient themes supply a bodyGradient that overrides the solid --bg on the body.
   const isGradient = !!theme.bodyGradient;
+  const isEffect   = !!theme.effect;
+  // Effect themes paint their own canvas; body just needs the base bg color.
   document.body.style.background = theme.bodyGradient ?? theme.vars["--bg"];
   document.body.style.backgroundAttachment = isGradient ? "fixed" : "";
   document.body.style.color = theme.vars["--fg"];
 
-  // Toggle gradient-active class & CSS flag so components can use
-  // semi-transparent backgrounds that let the gradient bleed through.
+  // Toggle background-active class & CSS flag so components can use
+  // semi-transparent backgrounds that let the gradient/effect bleed through.
+  const hasAnimatedBg = isGradient || isEffect;
   document.body.classList.toggle("gradient-active", isGradient);
+  document.body.classList.toggle("effect-active", isEffect);
+  document.body.classList.toggle("bg-animated", hasAnimatedBg);
   root.style.setProperty("--is-gradient", isGradient ? "1" : "0");
+  root.style.setProperty("--is-effect",   isEffect   ? "1" : "0");
 
-  // Apply per-theme class so CSS can target specific gradient animations.
+  // Apply per-theme class so CSS can target specific animations.
   // Remove any previous theme-* classes first.
   document.body.className = document.body.className
     .split(" ")
     .filter((c) => !c.startsWith("theme-"))
     .join(" ");
   document.body.classList.add(`theme-${theme.id}`);
+
+  // ── Effects / QOL options ──
+  const fx = { ...DEFAULT_EFFECTS, ...s.effects };
+  root.style.setProperty("--anim-speed", String(fx.animationSpeed));
+  root.style.setProperty("--panel-blur", `${fx.panelBlur}px`);
+  root.style.setProperty("--bg-dim", String(fx.backgroundDim));
+  document.body.classList.toggle("reduce-motion", fx.reduceMotion);
 
   // Apply font
   root.style.setProperty("--font-body", `'${font.cssFamily}', ${font.fallback}`);

@@ -145,7 +145,7 @@ export function Dashboard({ session }: { session: Session }) {
     : categories.find(c => c.id === activeCategory)?.name ?? t("dashboardDefaultHeader");
 
   return (
-    <div className="min-h-screen text-[var(--fg)]">
+    <div className="relative z-10 min-h-screen text-[var(--fg)]">
       <Sidebar
         activeCategory={activeCategory}
         activeTag={activeTag}
