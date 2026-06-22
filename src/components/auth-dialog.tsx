@@ -14,7 +14,7 @@ function isEtapEmail(email: string) {
   return email.trim().toLowerCase().endsWith("@etap.pt");
 }
 
-function authErrorMessage(message: string, t: (key: string) => string) {
+function authErrorMessage(message: string, t: ReturnType<typeof useLanguage>["t"]) {
   if (message === "Database error saving new user")
     return t("authDialogTriggerError");
   if (message.toLowerCase().includes("email not confirmed"))
