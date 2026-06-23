@@ -10,6 +10,7 @@ import { supabase } from "@/lib/supabase";
 import { applySettings, DEFAULT_SETTINGS, loadSettings, THEMES, type AppSettings } from "@/lib/settings";
 
 import { LanguageProvider, useLanguage } from "@/lib/language-context";
+import { ToastProvider } from "@/components/toast";
 
 function LibraryAppInner() {
   const { t } = useLanguage();
@@ -109,7 +110,9 @@ function LibraryAppInner() {
 export function LibraryApp() {
   return (
     <LanguageProvider>
-      <LibraryAppInner />
+      <ToastProvider>
+        <LibraryAppInner />
+      </ToastProvider>
     </LanguageProvider>
   );
 }

@@ -6,6 +6,7 @@ import { BookMarked, ChevronRight, Files, HardDrive, LogOut, ShieldCheck, UserPl
 import type { Category, Profile } from "@/lib/types";
 import { isAdminEmail, isStaff, ROLE_LABELS } from "@/lib/admin";
 import { cn, getInitials } from "@/lib/utils";
+import { useLanguage } from "@/lib/language-context";
 
 type Props = {
   activeCategory: string;
@@ -26,6 +27,7 @@ type Props = {
 };
 
 export function Sidebar({ activeCategory, activeTag, categories, isOpen, onCategoryChange, onClose, onTagChange, onSignOut, onEditProfile, onAdmin, onGrantRole, session, profile, stats, tags }: Props) {
+  const { t } = useLanguage();
   const email = profile?.email || session.user.email || "user@etap.pt";
   const fullName = profile?.full_name || session.user.user_metadata?.full_name || "";
   const displayName = fullName || email.split("@")[0];
@@ -98,31 +100,31 @@ export function Sidebar({ activeCategory, activeTag, categories, isOpen, onCateg
         {/* Stats strip */}
         <div className="grid grid-cols-3 border-b border-[var(--border)]">
           {[
-            { label: "docs", value: stats.total },
-            { label: "meus", value: stats.mine },
-            { label: "cats", value: stats.categories },
-          ].map(({ label, value }) => (
-            <div key={label} className="flex flex-col items-center justify-center py-3 border-r last:border-r-0 border-[var(--border)]">
+            { labelKey: "sidebarStatsDocs",  value: stats.total },
+            { labelKey: "sidebarStatsMine",  value: stats.mine },
+            { labelKey: "sidebarStatsCats",  value: stats.categories },
+          ].map(({ labelKey, value }) => (
+            <div key={labelKey} className="flex flex-col items-center justify-center py-3 border-r last:border-r-0 border-[var(--border)]">
               <span className="mono text-base font-bold text-[var(--fg)] leading-none">{value}</span>
-              <span className="mono text-[10px] uppercase tracking-widest text-[var(--fg-2)] mt-1">{label}</span>
+              <span className="mono text-[10px] uppercase tracking-widest text-[var(--fg-2)] mt-1">{t(labelKey as Parameters<typeof t>[0])}</span>
             </div>
           ))}
         </div>
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto py-4">
-          <Section label="Conteúdo">
+          <Section label={t("sidebarSectionContent")}>
             <NavRow
               active={activeCategory === "all"}
               icon={<Files size={16} />}
-              label="Todos os materiais"
+              label={t("sidebarAllMaterials")}
               count={stats.total}
               onClick={() => onCategoryChange("all")}
             />
           </Section>
 
           {categories.length > 0 && (
-            <Section label="Categorias">
+            <Section label={t("sidebarSectionCategories")}>
               {categories.map((cat) => (
                 <NavRow
                   key={cat.id}
@@ -136,23 +138,23 @@ export function Sidebar({ activeCategory, activeTag, categories, isOpen, onCateg
           )}
 
           {tags.length > 0 && (
-            <Section label="Tags">
+            <Section label={t("sidebarSectionTags")}>
               <div className="px-4 pb-2 flex flex-wrap gap-2">
-                <TagChip active={activeTag === "all"} label="all" onClick={() => onTagChange("all")} />
-                {tags.slice(0, 30).map((t) => (
-                  <TagChip key={t} active={activeTag === t} label={t} onClick={() => onTagChange(t)} />
+                <TagChip active={activeTag === "all"} label={t("sidebarTagAll")} onClick={() => onTagChange("all")} />
+                {tags.slice(0, 30).map((tag) => (
+                  <TagChip key={tag} active={activeTag === tag} label={tag} onClick={() => onTagChange(tag)} />
                 ))}
               </div>
             </Section>
           )}
 
           {showManagement && (
-            <Section label="Gestão">
+            <Section label={t("sidebarManagement")}>
               {showAdmin && (
                 <NavRow
                   active={false}
                   icon={<ShieldCheck size={16} />}
-                  label="Administração"
+                  label={t("sidebarAdmin")}
                   onClick={() => { onAdmin(); onClose(); }}
                 />
               )}
@@ -160,7 +162,7 @@ export function Sidebar({ activeCategory, activeTag, categories, isOpen, onCateg
                 <NavRow
                   active={false}
                   icon={<UserPlus size={16} />}
-                  label="Conceder acessos"
+                  label={t("sidebarGrantRole")}
                   onClick={() => { onGrantRole(); onClose(); }}
                 />
               )}
@@ -172,14 +174,14 @@ export function Sidebar({ activeCategory, activeTag, categories, isOpen, onCateg
         <div className="border-t border-[var(--border)] p-3 space-y-2">
           <div className="flex items-center gap-2 px-3 py-1.5 text-xs text-[var(--fg-2)]">
             <HardDrive size={14} />
-            <span className="mono">{stats.totalSize} usados</span>
+            <span className="mono">{stats.totalSize} {t("sidebarStorageUsed")}</span>
           </div>
           <button
             onClick={onSignOut}
             className="focus-ring flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-sm font-medium text-[var(--fg-2)] transition-colors hover:bg-[var(--bg-3)] hover:text-[var(--red)] active:scale-[0.98]"
           >
             <LogOut size={16} />
-            Terminar sessão
+            {t("sidebarSignOut")}
           </button>
         </div>
       </aside>

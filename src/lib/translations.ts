@@ -75,6 +75,10 @@ export const translations = {
     sidebarStatsDocs: "docs",
     sidebarStatsMine: "meus",
     sidebarStatsCats: "cats",
+    sidebarStorageUsed: "usados",
+    sidebarSectionContent: "Conteúdo",
+    sidebarSectionCategories: "Categorias",
+    sidebarSectionTags: "Tags",
 
     // Topbar
     topbarSearchPlaceholder: "Pesquisar materiais…",
@@ -228,6 +232,54 @@ export const translations = {
     settingsDialogEffectsOff: "desativado",
     settingsDialogEffectsOnLanding: "Mostrar na página inicial",
     settingsDialogEffectsOnLandingDesc: "Ativa o efeito de fundo na página de autenticação (por padrão apenas na app).",
+
+    // Back to top
+    backToTop: "Início",
+
+    // Sort / View controls
+    sortLabel: "Ordenar",
+    sortByDate: "Data",
+    sortByTitle: "Título",
+    sortBySize: "Tamanho",
+    sortByType: "Tipo",
+    sortAsc: "Crescente",
+    sortDesc: "Decrescente",
+    viewList: "Lista",
+    viewGrid: "Grelha",
+    viewCompact: "Compacto",
+
+    // Copy link
+    docCardCopyLink: "Copiar link",
+    docCardLinkCopied: "Link copiado!",
+    docCardLinkCopyError: "Erro ao copiar link.",
+
+    // Toast generic
+    toastDeleteSuccess: "Material eliminado.",
+    toastUploadSuccess: "Material enviado com sucesso!",
+    toastEditSuccess: "Metadados atualizados.",
+    toastProfileSaved: "Perfil guardado.",
+    toastRefreshed: "Biblioteca atualizada.",
+
+    // Recent searches
+    recentSearches: "Pesquisas recentes",
+    recentSearchesClear: "Limpar",
+
+    // Document card grid view extras
+    docCardGridViewBtn: "Ver",
+    docCardGridOwnerLabel: "por",
+
+    // Keyboard shortcuts hint
+    shortcutsTooltip: "Atalhos de teclado",
+    shortcutUpload: "Upload",
+    shortcutSearch: "Pesquisar",
+    shortcutRefresh: "Atualizar",
+    shortcutsHeader: "Atalhos",
+
+    // Sidebar — use t() instead of hardcoded strings
+    sidebarManagement: "Gestão",
+    sidebarAdmin: "Administração",
+    sidebarGrantRole: "Conceder acessos",
+    sidebarTagAll: "todas",
   },
   en: {
     // app / general
@@ -303,6 +355,10 @@ export const translations = {
     sidebarStatsDocs: "docs",
     sidebarStatsMine: "mine",
     sidebarStatsCats: "cats",
+    sidebarStorageUsed: "used",
+    sidebarSectionContent: "Content",
+    sidebarSectionCategories: "Categories",
+    sidebarSectionTags: "Tags",
 
     // Topbar
     topbarSearchPlaceholder: "Search materials…",
@@ -456,5 +512,53 @@ export const translations = {
     settingsDialogEffectsOff: "off",
     settingsDialogEffectsOnLanding: "Show on landing page",
     settingsDialogEffectsOnLandingDesc: "Enables the background effect on the auth page (default is app-only).",
+
+    // Back to top
+    backToTop: "Top",
+
+    // Sort / View controls
+    sortLabel: "Sort",
+    sortByDate: "Date",
+    sortByTitle: "Title",
+    sortBySize: "Size",
+    sortByType: "Type",
+    sortAsc: "Ascending",
+    sortDesc: "Descending",
+    viewList: "List",
+    viewGrid: "Grid",
+    viewCompact: "Compact",
+
+    // Copy link
+    docCardCopyLink: "Copy link",
+    docCardLinkCopied: "Link copied!",
+    docCardLinkCopyError: "Error copying link.",
+
+    // Toast generic
+    toastDeleteSuccess: "Material deleted.",
+    toastUploadSuccess: "Material uploaded successfully!",
+    toastEditSuccess: "Metadata updated.",
+    toastProfileSaved: "Profile saved.",
+    toastRefreshed: "Library refreshed.",
+
+    // Recent searches
+    recentSearches: "Recent searches",
+    recentSearchesClear: "Clear",
+
+    // Document card grid view extras
+    docCardGridViewBtn: "View",
+    docCardGridOwnerLabel: "by",
+
+    // Keyboard shortcuts hint
+    shortcutsTooltip: "Keyboard shortcuts",
+    shortcutUpload: "Upload",
+    shortcutSearch: "Search",
+    shortcutRefresh: "Refresh",
+    shortcutsHeader: "Shortcuts",
+
+    // Sidebar — use t() instead of hardcoded strings
+    sidebarManagement: "Management",
+    sidebarAdmin: "Administration",
+    sidebarGrantRole: "Grant access",
+    sidebarTagAll: "all",
   }
 };
