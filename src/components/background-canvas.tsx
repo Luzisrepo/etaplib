@@ -14,6 +14,16 @@
  *
  * The loop auto-pauses when the tab is hidden (visibilitychange) and resumes on
  * focus. DPR-aware, ResizeObserver-driven.
+ *
+ * FIX: Effect switching overlap
+ * ─────────────────────────────
+ * Previously the poll interval (250ms) caused old renderers to keep drawing for
+ * up to 250ms after a theme change, visibly overlapping the new effect.
+ * Fix: listen to the "etap-settings-changed" event (fired by SettingsDialog on
+ * every apply()) to trigger an immediate rebuild — no polling window, no overlap.
+ * The poll interval is kept only as a fallback for cross-tab sync.
+ * On rebuild we also hard-clear the canvas so no residue from the previous
+ * effect's compositing mode (e.g. "lighter" from plasma/aurora) bleeds through.
  */
 
 import { useEffect, useRef } from "react";
@@ -428,6 +438,12 @@ export function BackgroundCanvas({ themeId, effects, active }: Props) {
     let raf = 0;
     let lastTs = 0;
     let visible = true;
+
+    // ── Track which effect key is currently running ──────────────────────
+    // This lets us detect a switch and rebuild immediately instead of waiting
+    // for the 250ms poll, which was the root cause of overlap.
+    let activeKey = "";
+
     const ro = new ResizeObserver(() => syncSize());
     ro.observe(canvas);
 
@@ -442,6 +458,11 @@ export function BackgroundCanvas({ themeId, effects, active }: Props) {
         canvas.height = bh;
       }
       g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function buildKey(): string {
+      const { themeId, effects: fx } = propsRef.current;
+      return `${themeId}|${fx.reduceMotion}|${fx.particleDensity}`;
     }
 
     function buildRenderer() {
@@ -508,36 +529,85 @@ export function BackgroundCanvas({ themeId, effects, active }: Props) {
     }
     document.addEventListener("visibilitychange", onVisibility);
 
-    // ── Boot: build renderer for the current theme ──
+    // ── Boot: hard-clear canvas, dispose old renderer, build new one ──────
+    // The hard clearRect + compositing reset is critical: effects like plasma
+    // and aurora use globalCompositeOperation = "lighter", which leaves the
+    // canvas in a non-default state if they are interrupted mid-frame.
+    // Without explicitly resetting these, the next effect inherits the old
+    // blending mode and its pixels visually overlap/compound.
     function boot() {
+      // 1. Cancel the running animation frame immediately so the old renderer
+      //    cannot draw even a single extra frame after we start switching.
+      if (raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+
+      // 2. Dispose old renderer's resources (timers, offscreen buffers, etc.)
       renderer?.dispose?.();
+      renderer = null;
+
+      // 3. Hard reset the canvas — clear ALL pixels and reset every context
+      //    state that an effect renderer might have mutated.
+      g.globalCompositeOperation = "source-over";
+      g.globalAlpha = 1;
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      g.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 4. Re-sync DPR transform after the raw clearRect above.
+      syncSize();
+
+      // 5. Update the active key so the poll doesn't double-trigger.
+      activeKey = buildKey();
+
+      // 6. Build and initialise the new renderer.
       renderer = buildRenderer();
-      // Always draw one frame (covers reduceMotion + initial paint).
+
+      // 7. Draw one frame immediately (covers reduceMotion + initial paint).
       lastTs = 0;
       frameAt(performance.now());
+
+      // 8. Kick off the animation loop if appropriate.
       const { active, effects: fx } = propsRef.current;
-      if (active && !fx.reduceMotion && visible && !raf) {
+      if (active && !fx.reduceMotion && visible) {
         raf = requestAnimationFrame(loop);
       }
     }
+
+    // Initial boot
     boot();
 
-    // ── React to theme / setting changes by polling propsRef cheaply ──
-    // We don't want to tear down listeners on every keystroke in settings, so
-    // a lightweight interval compares the relevant bits and rebuilds as needed.
-    let lastKey = `${propsRef.current.themeId}|${propsRef.current.effects.reduceMotion}|${propsRef.current.effects.particleDensity}`;
-    const poll = window.setInterval(() => {
-      const p = propsRef.current;
-      const key = `${p.themeId}|${p.effects.reduceMotion}|${p.effects.particleDensity}`;
-      if (key !== lastKey) {
-        lastKey = key;
+    // ── React to theme/setting changes via the settings-changed event ─────
+    // SettingsDialog dispatches "etap-settings-changed" synchronously on every
+    // apply(), so we get an immediate rebuild with zero overlap window.
+    function onSettingsChanged() {
+      const newKey = buildKey();
+      if (newKey !== activeKey) {
         boot();
+      } else {
+        // Same effect, just active/reduceMotion changed — handle loop state.
+        const p = propsRef.current;
+        const shouldRun = p.active && !p.effects.reduceMotion && visible;
+        if (shouldRun && !raf) { lastTs = 0; raf = requestAnimationFrame(loop); }
+        else if (!shouldRun && raf) { cancelAnimationFrame(raf); raf = 0; }
       }
-      // Start/stop the loop based on active + reduceMotion toggles.
+    }
+    window.addEventListener("etap-settings-changed", onSettingsChanged);
+
+    // ── Fallback poll for cross-tab sync and active/reduceMotion toggles ──
+    // Reduced to 500ms since the event handler covers the fast path.
+    const poll = window.setInterval(() => {
+      const newKey = buildKey();
+      if (newKey !== activeKey) {
+        // Cross-tab change — rebuild.
+        boot();
+        return;
+      }
+      const p = propsRef.current;
       const shouldRun = p.active && !p.effects.reduceMotion && visible;
       if (shouldRun && !raf) { lastTs = 0; raf = requestAnimationFrame(loop); }
       else if (!shouldRun && raf) { cancelAnimationFrame(raf); raf = 0; }
-    }, 250);
+    }, 500);
 
     return () => {
       cancelAnimationFrame(raf);
@@ -545,8 +615,14 @@ export function BackgroundCanvas({ themeId, effects, active }: Props) {
       ro.disconnect();
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerout", onLeave);
+      window.removeEventListener("etap-settings-changed", onSettingsChanged);
       document.removeEventListener("visibilitychange", onVisibility);
       renderer?.dispose?.();
+      // Final canvas clear on unmount so no ghost pixels remain if the
+      // component is remounted with a different effect.
+      g.globalCompositeOperation = "source-over";
+      g.globalAlpha = 1;
+      g.clearRect(0, 0, canvas.width, canvas.height);
     };
   }, [active]);
 
