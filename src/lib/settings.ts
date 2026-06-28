@@ -28,7 +28,12 @@ export type ThemeId =
   | "starfield"
   | "matrix"
   | "aurora-flow"
-  | "plasma";
+  | "plasma"
+  // ── New effects
+  | "lightning"
+  | "sand-drift"
+  | "neon-grid"
+  | "fire-embers";
 
 export type FontId =
   | "inter"
@@ -49,7 +54,12 @@ export type EffectType =
   | "starfield"
   | "matrix"
   | "aurora-flow"
-  | "plasma";
+  | "plasma"
+  // ── New effects
+  | "lightning"
+  | "sand-drift"
+  | "neon-grid"
+  | "fire-embers";
 
 /** Tunable parameters supplied to the renderer from the active theme. */
 export interface EffectConfig {
@@ -887,6 +897,143 @@ export const THEMES: ThemeDef[] = [
       "--purple":    "#c4b5fd",
     },
   },
+  {
+    id: "lightning",
+    label: "Lightning Storm",
+    description: "Electric branching bolts raking the sky",
+    swatch: "#a78bfa",
+    bgSwatch: "#04020f",
+    category: "effect",
+    effect: {
+      type: "lightning",
+      colors: ["#a78bfa", "#c084fc", "#e0c3ff", "#7c3aed"],
+      baseDensity: 1,
+    },
+    vars: {
+      "--bg":        "#04020f",
+      "--bg-2":      "#09051e",
+      "--bg-3":      "#100a2c",
+      "--bg-4":      "#160f38",
+      "--border":    "#251842",
+      "--border-2":  "#352660",
+      "--fg":        "#ede9fe",
+      "--fg-2":      "#a78bfa",
+      "--fg-3":      "#5b3faa",
+      "--accent":    "#a78bfa",
+      "--accent-2":  "#7c3aed",
+      "--accent-bg": "#1a0840",
+      "--green":     "#34d399",
+      "--green-bg":  "#04241c",
+      "--red":       "#f87171",
+      "--red-bg":    "#280c0c",
+      "--amber":     "#fbbf24",
+      "--amber-bg":  "#281c04",
+      "--purple":    "#f0abfc",
+    },
+  },
+  {
+    id: "sand-drift",
+    label: "Sand Drift",
+    description: "Warm particles swept by invisible desert winds",
+    swatch: "#f59e0b",
+    bgSwatch: "#0c0700",
+    category: "effect",
+    effect: {
+      type: "sand-drift",
+      colors: ["#f59e0b", "#fbbf24", "#d97706", "#fde68a", "#92400e"],
+      baseDensity: 1,
+    },
+    vars: {
+      "--bg":        "#0c0700",
+      "--bg-2":      "#171004",
+      "--bg-3":      "#201708",
+      "--bg-4":      "#2a1f0c",
+      "--border":    "#3d2e10",
+      "--border-2":  "#55401a",
+      "--fg":        "#fef3c7",
+      "--fg-2":      "#d4a044",
+      "--fg-3":      "#7a5518",
+      "--accent":    "#f59e0b",
+      "--accent-2":  "#d97706",
+      "--accent-bg": "#2a1804",
+      "--green":     "#86efac",
+      "--green-bg":  "#0c1e10",
+      "--red":       "#fca5a5",
+      "--red-bg":    "#200808",
+      "--amber":     "#fbbf24",
+      "--amber-bg":  "#281c04",
+      "--purple":    "#c4b5fd",
+    },
+  },
+  {
+    id: "neon-grid",
+    label: "Grid Run",
+    description: "Raymarched corridor of glowing boxes rushing toward you",
+    swatch: "#c8a87a",
+    bgSwatch: "#050301",
+    category: "effect",
+    effect: {
+      type: "neon-grid",
+      colors: ["#c8a87a", "#ff9944", "#ffe0b0", "#ffd080"],
+      baseDensity: 1,
+    },
+    vars: {
+      "--bg":        "#050301",
+      "--bg-2":      "#0d0902",
+      "--bg-3":      "#160e03",
+      "--bg-4":      "#1e1404",
+      "--border":    "#2e1e06",
+      "--border-2":  "#46300a",
+      "--fg":        "#fff4e0",
+      "--fg-2":      "#c8a87a",
+      "--fg-3":      "#6b4f22",
+      "--accent":    "#c8a87a",
+      "--accent-2":  "#a07840",
+      "--accent-bg": "#1e1206",
+      "--green":     "#86efac",
+      "--green-bg":  "#0a1c10",
+      "--red":       "#fca5a5",
+      "--red-bg":    "#1e0606",
+      "--amber":     "#fbbf24",
+      "--amber-bg":  "#1e1604",
+      "--purple":    "#d8b4fe",
+    },
+  },
+  {
+    id: "fire-embers",
+    label: "Fire Embers",
+    description: "Glowing embers rising from an unseen inferno",
+    swatch: "#ff6b00",
+    bgSwatch: "#060100",
+    category: "effect",
+    effect: {
+      type: "fire-embers",
+      colors: ["#ff6b00", "#ff3d00", "#ffaa00", "#ff8800", "#ff2200"],
+      baseDensity: 1,
+    },
+    vars: {
+      "--bg":        "#060100",
+      "--bg-2":      "#0f0400",
+      "--bg-3":      "#180700",
+      "--bg-4":      "#220a00",
+      "--border":    "#3d1200",
+      "--border-2":  "#5c1e00",
+      "--fg":        "#fff1e0",
+      "--fg-2":      "#ff9944",
+      "--fg-3":      "#883300",
+      "--accent":    "#ff6b00",
+      "--accent-2":  "#ff3d00",
+      "--accent-bg": "#2a0c00",
+      "--green":     "#6ee7b7",
+      "--green-bg":  "#0a1e14",
+      "--red":       "#ff4444",
+      "--red-bg":    "#200404",
+      "--amber":     "#ffaa00",
+      "--amber-bg":  "#201400",
+      "--purple":    "#ff44aa",
+    },
+  },
+
 ];
 
 // ── Font definitions ─────────────────────────────────────────────────────────
