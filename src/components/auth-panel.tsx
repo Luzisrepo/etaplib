@@ -37,7 +37,7 @@ export function AuthPanel() {
       setNotice(t("authPanelVerifiedSuccess"));
       window.history.replaceState({}, "", window.location.pathname);
     }
-  }, []);
+  }, [t]);
 
   return (
     <main

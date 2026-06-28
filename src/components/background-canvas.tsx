@@ -958,7 +958,7 @@ const neonGrid: Factory = (_g, _colors) => {
   let w = 0, h = 0;
   let elapsedTime = 0;          // accumulates scaled dt
   let mouseMove: [number, number] = [0, 0];
-  let wheelOffset: [number, number] = [0, 0];
+  const wheelOffset: [number, number] = [0, 0];
 
   // Uniform locations
   let uResolution: WebGLUniformLocation | null = null;

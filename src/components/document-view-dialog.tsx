@@ -2,14 +2,14 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  Archive, Calendar, Download, Edit3, ExternalLink, File, FileText,
+  Archive, Download, Edit3, ExternalLink, File, FileText,
   Image as ImageIcon, Loader2, Presentation, Trash2, Video, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import type { LibraryDocument } from "@/lib/types";
-import { cn, formatBytes, formatRelativeDate, getInitials } from "@/lib/utils";
+import { formatBytes, formatRelativeDate, getInitials } from "@/lib/utils";
 import { useLanguage } from "@/lib/language-context";
 
 // ── Discord-like formatting parser ───────────────────────────────────────────

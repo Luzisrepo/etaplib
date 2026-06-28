@@ -8,7 +8,7 @@ import { Field, Input } from "@/components/ui/field";
 import { StatusCallout } from "@/components/ui/status-callout";
 import { supabase } from "@/lib/supabase";
 import type { Profile } from "@/lib/types";
-import { cn, getInitials, safeFileName } from "@/lib/utils";
+import { cn, getInitials } from "@/lib/utils";
 
 type Props = { session: Session; open: boolean; onClose: () => void; onUpdated: (p: Partial<Profile>) => void; };
 

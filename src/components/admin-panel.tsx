@@ -76,7 +76,7 @@ export function AdminPanel({ open, onClose, session }: Props) {
     setGrantOpen(true);
   }
 
-  function handleGranted(_email: string, _role: Role) {
+  function handleGranted(_email: string, _role: Role): void {
     setGrantTarget(null);
     void load();
   }
