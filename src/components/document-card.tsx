@@ -15,9 +15,7 @@ type Props = {
   document: LibraryDocument;
   isOwner: boolean;
   onDeleted: (id: string) => void;
-  onUpdated: (doc: LibraryDocument) => void;
   onEdit: () => void;
-  onRefresh: () => void;
   onSelect?: () => void;
   compact?: boolean;
 };

@@ -1033,11 +1033,11 @@ const neonGrid: Factory = (_g, _colors) => {
   function renderGL(time: number) {
     if (!gl || !program) return;
     gl.useProgram(program);
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    if (buffer) gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.uniform2f(uResolution, w, h);
     gl.uniform1f(uTime, time * 1e-3);
-    gl.uniform2f(uMove, ...mouseMove);
-    gl.uniform2f(uWheel, ...wheelOffset);
+    gl.uniform2f(uMove, mouseMove[0], mouseMove[1]);
+    gl.uniform2f(uWheel, wheelOffset[0], wheelOffset[1]);
     gl.clearColor(0, 0, 0, 1);
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);

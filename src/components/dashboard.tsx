@@ -276,9 +276,7 @@ export function Dashboard({ session }: { session: Session }) {
                     document={doc}
                     isOwner={doc.owner_id === session.user.id}
                     onDeleted={handleDelete}
-                    onUpdated={handleUpdated}
                     onEdit={() => setEditing(doc)}
-                    onRefresh={silentRefresh}
                     onSelect={() => setMaximizedDoc(doc)}
                     compact={viewMode === "compact"}
                   />
