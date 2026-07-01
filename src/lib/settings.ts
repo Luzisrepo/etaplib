@@ -46,6 +46,47 @@ export type FontSize = "sm" | "md" | "lg" | "xl";
 
 export type LanguageId = "pt" | "en";
 
+export type LayoutDensity = "comfortable" | "compact";
+
+export type DateFormat = "dmy" | "mdy" | "ymd";
+
+export type TimeFormat = "24h" | "12h";
+
+export interface AccessibilitySettings {
+  /** Heavier borders + flatter surfaces for higher contrast. */
+  highContrast: boolean;
+  /** Thicker, more visible focus outlines for keyboard navigation. */
+  boldFocus: boolean;
+  /** Bumps the minimum tap/click target size of buttons & links. */
+  largeTargets: boolean;
+}
+
+export const DEFAULT_ACCESSIBILITY: AccessibilitySettings = {
+  highContrast: false,
+  boldFocus: false,
+  largeTargets: false,
+};
+
+/** Curated accent-color presets, independent of the active theme. */
+export interface AccentPreset {
+  id: string;
+  label: string;
+  hex: string;
+}
+
+export const ACCENT_PRESETS: AccentPreset[] = [
+  { id: "blue",   label: "Azul",    hex: "#2f81f7" },
+  { id: "cyan",   label: "Ciano",   hex: "#22d3ee" },
+  { id: "green",  label: "Verde",   hex: "#3fb950" },
+  { id: "teal",   label: "Verde-água", hex: "#2dd4bf" },
+  { id: "amber",  label: "Âmbar",   hex: "#d29922" },
+  { id: "orange", label: "Laranja", hex: "#f97316" },
+  { id: "red",    label: "Vermelho", hex: "#f85149" },
+  { id: "pink",   label: "Rosa",    hex: "#ec4899" },
+  { id: "purple", label: "Roxo",    hex: "#a371f7" },
+  { id: "indigo", label: "Índigo",  hex: "#6366f1" },
+];
+
 // ── Effect theme engine ──────────────────────────────────────────────────────
 
 /** Identifies which canvas renderer runs for an effect theme. */
@@ -104,6 +145,18 @@ export interface AppSettings {
   fontSize: FontSize;
   language: LanguageId;
   effects: EffectSettings;
+  /** Hex override applied on top of the active theme's accent. Null = use theme default. */
+  accentOverride: string | null;
+  layoutDensity: LayoutDensity;
+  accessibility: AccessibilitySettings;
+  /** Whether the app records documents you open in a local reading history. */
+  trackReadingHistory: boolean;
+  /** Whether the app records terms you search for in a local search history. */
+  trackSearchHistory: boolean;
+  dateFormat: DateFormat;
+  timeFormat: TimeFormat;
+  /** IANA timezone name, or "auto" to follow the browser/device timezone. */
+  timezone: string;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -112,6 +165,14 @@ export const DEFAULT_SETTINGS: AppSettings = {
   fontSize: "md",
   language: "pt",
   effects: DEFAULT_EFFECTS,
+  accentOverride: null,
+  layoutDensity: "comfortable",
+  accessibility: DEFAULT_ACCESSIBILITY,
+  trackReadingHistory: true,
+  trackSearchHistory: true,
+  dateFormat: "dmy",
+  timeFormat: "24h",
+  timezone: "auto",
 };
 
 const LS_KEY = "etap-settings-v1";
@@ -122,12 +183,13 @@ export function loadSettings(): AppSettings {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return DEFAULT_SETTINGS;
     const parsed = JSON.parse(raw);
-    // Deep-merge `effects` so partially-stored (or older) settings still
+    // Deep-merge nested objects so partially-stored (or older) settings still
     // resolve to the full set of defaults.
     return {
       ...DEFAULT_SETTINGS,
       ...parsed,
       effects: { ...DEFAULT_EFFECTS, ...(parsed?.effects ?? {}) },
+      accessibility: { ...DEFAULT_ACCESSIBILITY, ...(parsed?.accessibility ?? {}) },
     };
   } catch {
     return DEFAULT_SETTINGS;
@@ -140,6 +202,37 @@ export function saveSettings(s: AppSettings): void {
     localStorage.setItem(LS_KEY, JSON.stringify(s));
   } catch {
     // ignore
+  }
+}
+
+// ── Timezones ─────────────────────────────────────────────────────────────────
+
+export interface TimezoneDef {
+  id: string; // "auto" or IANA name
+  label: string;
+}
+
+export const TIMEZONES: TimezoneDef[] = [
+  { id: "auto", label: "Detetar automaticamente" },
+  { id: "Europe/Lisbon", label: "Europe/Lisbon — Hora de Portugal" },
+  { id: "Atlantic/Madeira", label: "Atlantic/Madeira" },
+  { id: "Atlantic/Azores", label: "Atlantic/Azores" },
+  { id: "Europe/London", label: "Europe/London" },
+  { id: "Europe/Madrid", label: "Europe/Madrid" },
+  { id: "Europe/Paris", label: "Europe/Paris" },
+  { id: "Atlantic/Canary", label: "Atlantic/Canary" },
+  { id: "America/Sao_Paulo", label: "America/São Paulo" },
+  { id: "America/New_York", label: "America/New York" },
+  { id: "UTC", label: "UTC" },
+];
+
+/** Resolves "auto" to the browser/device IANA timezone. */
+export function resolveTimezone(tz: string): string {
+  if (tz && tz !== "auto") return tz;
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  } catch {
+    return "UTC";
   }
 }
 
@@ -1105,6 +1198,41 @@ export const FONT_SIZES: FontSizeDef[] = [
   { id: "xl",  label: "X-Large", px: 19 },
 ];
 
+// ── Color helpers (for the accent-color override) ───────────────────────────
+
+function clamp255(n: number): number {
+  return Math.max(0, Math.min(255, Math.round(n)));
+}
+
+function hexToRgb(hex: string): [number, number, number] {
+  const m = hex.replace("#", "");
+  const full = m.length === 3 ? m.split("").map((c) => c + c).join("") : m;
+  const num = parseInt(full, 16);
+  return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
+}
+
+/** Darkens (negative) or lightens (positive) a hex color by `percent` (-100..100). */
+function shade(hex: string, percent: number): string {
+  try {
+    const [r, g, b] = hexToRgb(hex);
+    const p = percent / 100;
+    const f = (c: number) => clamp255(p < 0 ? c * (1 + p) : c + (255 - c) * p);
+    const toHex = (c: number) => f(c).toString(16).padStart(2, "0");
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  } catch {
+    return hex;
+  }
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  try {
+    const [r, g, b] = hexToRgb(hex);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  } catch {
+    return hex;
+  }
+}
+
 // ── Apply settings to DOM ─────────────────────────────────────────────────────
 
 export function applySettings(s: AppSettings): void {
@@ -1154,6 +1282,22 @@ export function applySettings(s: AppSettings): void {
   root.style.setProperty("--panel-blur", `${fx.panelBlur}px`);
   root.style.setProperty("--bg-dim", String(fx.backgroundDim));
   document.body.classList.toggle("reduce-motion", fx.reduceMotion);
+
+  // ── Accent color override (independent of the active theme) ──
+  if (s.accentOverride) {
+    root.style.setProperty("--accent", s.accentOverride);
+    root.style.setProperty("--accent-2", shade(s.accentOverride, -18));
+    root.style.setProperty("--accent-bg", hexToRgba(s.accentOverride, 0.16));
+  }
+
+  // ── Layout density ──
+  document.body.classList.toggle("density-compact", s.layoutDensity === "compact");
+
+  // ── Accessibility ──
+  const a11y = { ...DEFAULT_ACCESSIBILITY, ...s.accessibility };
+  document.body.classList.toggle("a11y-high-contrast", a11y.highContrast);
+  document.body.classList.toggle("a11y-strong-focus", a11y.boldFocus);
+  document.body.classList.toggle("a11y-large-targets", a11y.largeTargets);
 
   // Apply font
   root.style.setProperty("--font-body", `'${font.cssFamily}', ${font.fallback}`);

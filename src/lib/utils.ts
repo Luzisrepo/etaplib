@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
+import { loadSettings, resolveTimezone } from "@/lib/settings";
 
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs);
@@ -12,12 +13,45 @@ export function formatBytes(bytes: number) {
   return `${value.toFixed(value >= 10 || index === 0 ? 0 : 1)} ${units[index]}`;
 }
 
+/** Locale used for Intl formatting, derived from the language setting. */
+function dateLocale(): string {
+  return loadSettings().language === "en" ? "en-GB" : "pt-PT";
+}
+
+/**
+ * Formats a date string honoring the user's Language & Region preferences
+ * (day/month/year order, and timezone). Falls back to the dd/mmm/yyyy
+ * Portuguese style used throughout the app when no preference is stored.
+ */
 export function formatDate(date: string) {
-  return new Intl.DateTimeFormat("pt-PT", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric"
+  const s = loadSettings();
+  const d = new Date(date);
+  const timeZone = resolveTimezone(s.timezone);
+
+  if (s.dateFormat === "ymd") {
+    return new Intl.DateTimeFormat("sv-SE", { year: "numeric", month: "2-digit", day: "2-digit", timeZone }).format(d);
+  }
+  if (s.dateFormat === "mdy") {
+    return new Intl.DateTimeFormat("en-US", { day: "2-digit", month: "short", year: "numeric", timeZone }).format(d);
+  }
+  return new Intl.DateTimeFormat(dateLocale(), { day: "2-digit", month: "short", year: "numeric", timeZone }).format(d);
+}
+
+/** Formats just the time portion, honoring the 12h/24h preference + timezone. */
+export function formatTime(date: string) {
+  const s = loadSettings();
+  const timeZone = resolveTimezone(s.timezone);
+  return new Intl.DateTimeFormat(dateLocale(), {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: s.timeFormat === "12h",
+    timeZone,
   }).format(new Date(date));
+}
+
+/** Formats date + time together, e.g. for session/login-history timestamps. */
+export function formatDateTime(date: string) {
+  return `${formatDate(date)} · ${formatTime(date)}`;
 }
 
 export function formatRelativeDate(date: string) {
@@ -32,10 +66,13 @@ export function formatRelativeDate(date: string) {
   const week = 7 * day;
   const month = 30 * day;
 
-  // For very recent items (within 2 min), just say "agora"
-  if (absDiff < 2 * minute) return "agora mesmo";
+  const locale = dateLocale();
+  const justNow = locale === "en-GB" ? "just now" : "agora mesmo";
 
-  const formatter = new Intl.RelativeTimeFormat("pt-PT", { numeric: "auto" });
+  // For very recent items (within 2 min), just say "agora"
+  if (absDiff < 2 * minute) return justNow;
+
+  const formatter = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
 
   if (absDiff < hour) return formatter.format(Math.round(diff / minute), "minute");
   if (absDiff < day) return formatter.format(Math.round(diff / hour), "hour");

@@ -294,3 +294,51 @@ body.reduce-motion .effect-swatch > span:first-child {
 .gradient-active .gp-sidebar,
 .gradient-active .gp-topbar,
 .gradient-active .gp-main { /* falls through to the .bg-animated rules above */ }
+
+/* ── Layout density ────────────────────────────────────────────────────────── */
+/* "compact" reduces vertical padding and gap throughout the document list.
+   Uses data-density attribute or body class set by applySettings(). */
+body.density-compact .document-card { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+body.density-compact .document-card-meta { gap: 0.25rem; }
+
+/* ── Accessibility overrides ────────────────────────────────────────────────── */
+/* high-contrast: stronger border colours everywhere */
+body.a11y-high-contrast {
+  --border:   #5a6370;
+  --border-2: #8b949e;
+  --fg-3:     #656d76;
+}
+body.a11y-high-contrast .document-card,
+body.a11y-high-contrast .gp-sidebar,
+body.a11y-high-contrast .gp-topbar {
+  border-color: var(--border) !important;
+  box-shadow: none !important;
+}
+
+/* strong focus: wider, higher-contrast focus ring */
+body.a11y-strong-focus .focus-ring:focus-visible {
+  outline: 3px solid var(--accent) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 5px var(--accent-bg) !important;
+}
+
+/* large targets: minimum 44 px tap target for interactive elements */
+body.a11y-large-targets button,
+body.a11y-large-targets a[role="button"],
+body.a11y-large-targets [role="switch"] {
+  min-height: 44px !important;
+  min-width:  44px !important;
+}
+
+/* ── Settings hub: section scroll behaviour ─────────────────────────────────── */
+/* The right-side content pane should be independently scrollable so the
+   left nav stays anchored. max-h is handled inline via h-full/overflow-y-auto. */
+.settings-content { scroll-padding-top: 1rem; }
+
+/* ── Danger zone ────────────────────────────────────────────────────────────── */
+/* Extra visual affordance for destructive action areas */
+.danger-zone {
+  border-color: color-mix(in srgb, var(--red) 40%, transparent) !important;
+  background:   color-mix(in srgb, var(--red) 6%, var(--bg)) !important;
+}
+

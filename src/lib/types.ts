@@ -1,5 +1,14 @@
 export type Role = "member" | "teacher" | "admin";
 
+export type ProfileVisibility = "school" | "staff" | "private";
+
+export type DefaultFilters = {
+  categoryId: string | null;
+  sortField: "created_at" | "title" | "file_size";
+  sortDir: "asc" | "desc";
+  viewMode: "comfortable" | "compact" | "grid";
+};
+
 export type Profile = {
   id: string;
   email: string;
@@ -8,6 +17,51 @@ export type Profile = {
   role: Role;
   created_at: string;
   updated_at: string;
+  bio: string | null;
+  course: string | null;
+  academic_year: string | null;
+  class_group: string | null;
+  profile_visibility: ProfileVisibility;
+  show_reading_history: boolean;
+  favorite_category_ids: string[];
+  default_filters: DefaultFilters | null;
+  deletion_requested_at: string | null;
+};
+
+export type SavedSearch = {
+  id: string;
+  user_id: string;
+  label: string;
+  query: string;
+  category_id: string | null;
+  tag: string | null;
+  created_at: string;
+};
+
+export type ReadingList = {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+};
+
+export type UserSession = {
+  id: string;
+  user_id: string;
+  device_id: string;
+  device_label: string | null;
+  user_agent: string | null;
+  created_at: string;
+  last_seen_at: string;
+};
+
+export type LoginHistoryEntry = {
+  id: string;
+  user_id: string;
+  occurred_at: string;
+  device_label: string | null;
+  user_agent: string | null;
 };
 
 export type Category = {

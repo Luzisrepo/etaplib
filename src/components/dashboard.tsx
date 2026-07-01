@@ -14,7 +14,6 @@ import { Sidebar } from "@/components/sidebar";
 import { SortViewBar, type SortField, type SortDir, type ViewMode } from "@/components/sort-view-bar";
 import { Topbar } from "@/components/topbar";
 import { UploadDialog } from "@/components/upload-dialog";
-import { ProfileEditorDialog } from "@/components/profile-editor-dialog";
 import { SettingsDialog } from "@/components/settings-dialog";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -40,7 +39,6 @@ export function Dashboard({ session }: { session: Session }) {
   const [uploadOpen, setUploadOpen]         = useState(false);
   const [editing, setEditing]               = useState<LibraryDocument | null>(null);
   const [sidebarOpen, setSidebarOpen]       = useState(false);
-  const [profileOpen, setProfileOpen]       = useState(false);
   const [settingsOpen, setSettingsOpen]     = useState(false);
   const [adminOpen, setAdminOpen]           = useState(false);
   const [grantOpen, setGrantOpen]           = useState(false);
@@ -199,7 +197,7 @@ export function Dashboard({ session }: { session: Session }) {
         onClose={() => setSidebarOpen(false)}
         onTagChange={tag => { setActiveTag(tag); setSidebarOpen(false); }}
         onSignOut={() => supabase.auth.signOut()}
-        onEditProfile={() => setProfileOpen(true)}
+        onEditProfile={() => { setSettingsOpen(true); }}
         onAdmin={() => setAdminOpen(true)}
         onGrantRole={() => setGrantOpen(true)}
         session={session}
@@ -348,18 +346,30 @@ export function Dashboard({ session }: { session: Session }) {
       )}
 
       {profile && (
-        <ProfileEditorDialog
-          open={profileOpen}
-          onClose={() => setProfileOpen(false)}
+        <SettingsDialog
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
           profile={profile}
-          onSaved={updatedProfile => {
+          session={session}
+          categories={categories}
+          onProfileSaved={(updatedProfile) => {
             setProfile(updatedProfile);
             silentRefresh();
             toast("success", t("toastProfileSaved"));
           }}
         />
       )}
-      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      {!profile && settingsOpen && (
+        /* Fallback while profile loads: render headless so onClose still works */
+        <SettingsDialog
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          profile={null}
+          session={session}
+          categories={categories}
+          onProfileSaved={() => {}}
+        />
+      )}
       <AdminPanel open={adminOpen} onClose={() => setAdminOpen(false)} session={session} />
       <GrantRoleDialog
         open={grantOpen}
