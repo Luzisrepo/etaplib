@@ -43,6 +43,7 @@ export function UploadDialog({ categories, onClose, onUploaded, open, session, i
   }, [open]);
 
   // Handle initialFile automatic upload trigger
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (open && initialFile) {
       setFile(initialFile);

@@ -1,18 +1,18 @@
 "use client";
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import {
-  AtSign, BookOpen, Check, ChevronLeft, Clock, Database, Download, Eye, EyeOff,
+  AtSign, BookOpen, Check, ChevronLeft, Download, Eye, EyeOff,
   FlaskConical, Gauge, Globe, Key, Laptop, Layout, Lock, LogIn, Monitor, Palette,
-  Pencil, Plus, RotateCcw, Save, Shield, Sparkles, Star, Trash2, Type,
-  User, X, ZoomIn, Smartphone,
+  Pencil, Plus, RotateCcw, Save, Shield, Sparkles, Star, Trash2,
+  User, X, Smartphone,
 } from "lucide-react";
 import {
   ACCENT_PRESETS, DEFAULT_ACCESSIBILITY, applySettings, type AppSettings,
   DEFAULT_SETTINGS, FONT_SIZES, FONTS, loadSettings, saveSettings,
   THEMES, themeCategory, TIMEZONES, type AccessibilitySettings,
-  type DateFormat, type EffectSettings, type FontId, type FontSize,
+  type EffectSettings, type FontId, type FontSize, type DateFormat,
   type LayoutDensity, type ParticleDensity, type ThemeDef, type ThemeId,
   type TimeFormat,
 } from "@/lib/settings";
@@ -1492,13 +1492,13 @@ function LanguageSection({
     { id: "en" as const, label: "English",   flag: "🇬🇧", desc: t("settingsDialogLanguageEnDesc") },
   ];
 
-  const DATE_OPTIONS: { id: "dmy" | "mdy" | "ymd"; label: string }[] = [
+  const DATE_OPTIONS: { id: DateFormat; label: string }[] = [
     { id: "dmy", label: t("settingsLangDateDMY") },
     { id: "mdy", label: t("settingsLangDateMDY") },
     { id: "ymd", label: t("settingsLangDateYMD") },
   ];
 
-  const TIME_OPTIONS: { id: "24h" | "12h"; label: string }[] = [
+  const TIME_OPTIONS: { id: TimeFormat; label: string }[] = [
     { id: "24h", label: t("settingsLangTime24h") },
     { id: "12h", label: t("settingsLangTime12h") },
   ];
@@ -1590,7 +1590,11 @@ function LanguageSection({
       {/* Timezone */}
       <div>
         <DividerLabel label={t("settingsLangTimezone")} />
+        {/* Native <select> has implicit combobox role; browser handles aria automatically */}
+        {/* eslint-disable-next-line jsx-a11y/role-has-required-aria-props */}
         <select
+          id="tz-select"
+          aria-label={t("settingsLangTimezone")}
           value={settings.timezone}
           onChange={(e) => handleApply({ timezone: e.target.value })}
           className="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm text-[var(--fg)] focus:border-[var(--accent)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] transition-colors"
