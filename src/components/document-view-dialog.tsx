@@ -3,8 +3,10 @@
 import React, { useEffect, useState } from "react";
 import {
   Archive, Download, Edit3, ExternalLink, File, FileText,
-  Image as ImageIcon, Loader2, Presentation, Trash2, Video, X
+  Image as ImageIcon, Loader2, Presentation, Trash2, Video, X,
+  Code2
 } from "lucide-react";
+import { CodePreview, CODE_EXTENSIONS } from "./code-preview";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
@@ -110,6 +112,8 @@ function renderDiscordFormat(text: string): React.ReactNode {
 
 function fileIcon(mime: string, name: string) {
   const s = `${mime} ${name}`.toLowerCase();
+  const ext = name.split(".").pop()?.toLowerCase() ?? "";
+  if (CODE_EXTENSIONS.has(ext)) return Code2;
   if (s.includes("pdf") || s.includes("text") || s.endsWith(".md")) return FileText;
   if (s.includes("video")) return Video;
   if (s.includes("presentation") || s.includes("powerpoint") || s.endsWith(".pptx")) return Presentation;
@@ -142,6 +146,7 @@ export function DocumentViewDialog({
   const [confirmDel, setConfirmDel] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
+  const [codeContent, setCodeContent] = useState<string | null>(null);
 
   // Close on Escape
   useEffect(() => {
@@ -156,6 +161,7 @@ export function DocumentViewDialog({
     if (!open || !document) {
       setPreviewUrl(null);
       setLoadingPreview(false);
+      setCodeContent(null);
       return;
     }
 
@@ -165,6 +171,8 @@ export function DocumentViewDialog({
       if (!document) return;
       const mime = document.mime_type.toLowerCase();
       const name = document.file_name.toLowerCase();
+      const ext = name.split(".").pop()?.toLowerCase() ?? "";
+      const isCode = CODE_EXTENSIONS.has(ext);
       const isPreviewable =
         mime.startsWith("image/") ||
         mime.startsWith("video/") ||
@@ -173,7 +181,8 @@ export function DocumentViewDialog({
         mime.startsWith("text/") ||
         name.endsWith(".txt") ||
         name.endsWith(".md") ||
-        name.endsWith(".json");
+        name.endsWith(".json") ||
+        isCode;
 
       if (!isPreviewable) return;
 
@@ -183,15 +192,31 @@ export function DocumentViewDialog({
         .createSignedUrl(document.file_path, 300);
 
       if (cancelled) return;
-      setLoadingPreview(false);
 
       if (e) {
         console.error("Erro ao carregar pré-visualização:", e.message);
+        setLoadingPreview(false);
         return;
       }
 
       if (data?.signedUrl) {
         setPreviewUrl(data.signedUrl);
+        if (isCode) {
+          try {
+            const res = await fetch(data.signedUrl);
+            if (!res.ok) throw new Error("Failed to fetch code content");
+            const text = await res.text();
+            if (!cancelled) {
+              setCodeContent(text);
+            }
+          } catch (err) {
+            console.error("Erro ao carregar conteúdo do código:", err);
+          }
+        }
+      }
+
+      if (!cancelled) {
+        setLoadingPreview(false);
       }
     }
 
@@ -328,33 +353,41 @@ export function DocumentViewDialog({
           {!loadingPreview && previewUrl && (
             <div className="space-y-2">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-[var(--fg-3)]">{t("viewDialogPreviewLabel")}</h3>
-              <div className="rounded-lg border border-[var(--border)] bg-[var(--bg)] overflow-hidden flex items-center justify-center p-1 shadow-inner min-h-[200px] max-h-[360px]">
-                {document.mime_type.toLowerCase().startsWith("image/") ? (
-                  <img
-                    src={previewUrl}
-                    alt={document.title}
-                    className="max-h-[340px] max-w-full object-contain rounded p-1"
-                  />
-                ) : document.mime_type.toLowerCase().startsWith("video/") ? (
-                  <video
-                    src={previewUrl}
-                    controls
-                    className="max-h-[340px] max-w-full rounded"
-                  />
-                ) : document.mime_type.toLowerCase().includes("pdf") || document.file_name.toLowerCase().endsWith(".pdf") ? (
-                  <iframe
-                    src={`${previewUrl}#toolbar=0`}
-                    className="w-full h-[340px] rounded border-0"
-                    title="PDF Preview"
-                  />
-                ) : (
-                  <iframe
-                    src={previewUrl}
-                    className="w-full h-[300px] rounded border-0 bg-[var(--bg-2)]/60 text-[var(--fg)] p-2 font-mono text-[11px]"
-                    title="Text Preview"
-                  />
-                )}
-              </div>
+              {codeContent !== null ? (
+                <CodePreview
+                  content={codeContent}
+                  fileName={document.file_name}
+                  fileSize={document.file_size}
+                />
+              ) : (
+                <div className="rounded-lg border border-[var(--border)] bg-[var(--bg)] overflow-hidden flex items-center justify-center p-1 shadow-inner min-h-[200px] max-h-[360px]">
+                  {document.mime_type.toLowerCase().startsWith("image/") ? (
+                    <img
+                      src={previewUrl}
+                      alt={document.title}
+                      className="max-h-[340px] max-w-full object-contain rounded p-1"
+                    />
+                  ) : document.mime_type.toLowerCase().startsWith("video/") ? (
+                    <video
+                      src={previewUrl}
+                      controls
+                      className="max-h-[340px] max-w-full rounded"
+                    />
+                  ) : document.mime_type.toLowerCase().includes("pdf") || document.file_name.toLowerCase().endsWith(".pdf") ? (
+                    <iframe
+                      src={`${previewUrl}#toolbar=0`}
+                      className="w-full h-[340px] rounded border-0"
+                      title="PDF Preview"
+                    />
+                  ) : (
+                    <iframe
+                      src={previewUrl}
+                      className="w-full h-[300px] rounded border-0 bg-[var(--bg-2)]/60 text-[var(--fg)] p-2 font-mono text-[11px]"
+                      title="Text Preview"
+                    />
+                  )}
+                </div>
+              )}
             </div>
           )}
 

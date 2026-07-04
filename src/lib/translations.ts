@@ -181,6 +181,15 @@ export const translations = {
     viewDialogConfirmYes: "Sim",
     viewDialogConfirmNo: "Não",
 
+    // CodePreview
+    codePreviewLanguage: "Linguagem",
+    codePreviewCopy: "Copiar código",
+    codePreviewCopied: "Copiado!",
+    codePreviewTruncated: "Ficheiro truncado a {size}. Descarregue para ver completo.",
+    codePreviewRawSource: "Fonte",
+    codePreviewRendered: "Pré-visualização",
+    codePreviewLines: "{count} linhas",
+
     // ProfileEditorDialog
     profileEditorHeader: "Editar perfil",
     profileEditorAvatarLimitError: "A imagem não pode exceder 2 MB.",
@@ -622,6 +631,15 @@ export const translations = {
     viewDialogDeleteConfirm: "Are you sure?",
     viewDialogConfirmYes: "Yes",
     viewDialogConfirmNo: "No",
+
+    // CodePreview
+    codePreviewLanguage: "Language",
+    codePreviewCopy: "Copy code",
+    codePreviewCopied: "Copied!",
+    codePreviewTruncated: "File truncated to {size}. Download to see full content.",
+    codePreviewRawSource: "Source",
+    codePreviewRendered: "Preview",
+    codePreviewLines: "{count} lines",
 
     // ProfileEditorDialog
     profileEditorHeader: "Edit profile",
