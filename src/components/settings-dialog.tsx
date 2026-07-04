@@ -1258,7 +1258,7 @@ function LibrarySection({
             <div key={s.id} className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-[var(--bg)] px-4 py-2.5">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-[var(--fg)] truncate">{s.label}</p>
-                {s.query && <p className="mono text-[11px] text-[var(--fg-3)] truncate">"{s.query}"</p>}
+                {s.query && <p className="mono text-[11px] text-[var(--fg-3)] truncate">&ldquo;{s.query}&rdquo;</p>}
               </div>
               <GhostBtn onClick={() => handleDeleteSearch(s.id)}>
                 <Trash2 size={13} />
@@ -1590,8 +1590,6 @@ function LanguageSection({
       {/* Timezone */}
       <div>
         <DividerLabel label={t("settingsLangTimezone")} />
-        {/* Native <select> has implicit combobox role; browser handles aria automatically */}
-        {/* eslint-disable-next-line jsx-a11y/role-has-required-aria-props */}
         <select
           id="tz-select"
           aria-label={t("settingsLangTimezone")}

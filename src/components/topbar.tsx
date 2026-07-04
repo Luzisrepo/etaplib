@@ -242,6 +242,7 @@ export function Topbar({
             placeholder={t("topbarSearchPlaceholder")}
             aria-label={t("topbarSearchAriaLabel")}
             aria-expanded={showDropdown}
+            aria-controls="search-listbox"
             aria-haspopup="listbox"
             aria-autocomplete="list"
             aria-activedescendant={activeIdx >= 0 ? `suggestion-${activeIdx}` : undefined}
@@ -267,6 +268,7 @@ export function Topbar({
         {showDropdown && (
           <div
             ref={dropdownRef}
+            id="search-listbox"
             role="listbox"
             className="absolute left-0 right-0 top-full z-50 max-h-[360px] overflow-y-auto rounded-b-lg border border-t-0 border-[var(--accent)] bg-[var(--bg)] shadow-xl shadow-black/20 anim-slide-down"
           >

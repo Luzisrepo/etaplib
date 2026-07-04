@@ -37,24 +37,27 @@ export function UploadDialog({ categories, onClose, onUploaded, open, session, i
   const [error, setError]         = useState<string | null>(null);
   const [dragging, setDragging]   = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Stable ref that always points to the latest doUpload without it being a
+  // useEffect dependency (avoids the exhaustive-deps warning on the auto-trigger).
+  const doUploadRef = useRef<typeof doUpload | null>(null);
 
   useEffect(() => {
     if (!open) { setError(null); setProgress(0); setDone(false); setFile(null); setTitle(""); setDesc(""); setCat(""); setTags(""); setTagError(null); setDescError(null); }
   }, [open]);
 
   // Handle initialFile automatic upload trigger
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (open && initialFile) {
       setFile(initialFile);
       const cleanTitle = initialFile.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " ");
       setTitle(cleanTitle);
       
-      // Delay slightly to ensure state is set, then start upload
-      const t = setTimeout(() => {
-        void doUpload(initialFile, cleanTitle);
+      // Delay slightly to ensure state is set, then start upload.
+      // We call via ref so doUpload is not needed in the dep array.
+      const timer = setTimeout(() => {
+        void doUploadRef.current?.(initialFile, cleanTitle);
       }, 100);
-      return () => clearTimeout(t);
+      return () => clearTimeout(timer);
     }
   }, [open, initialFile]);
 
@@ -103,6 +106,9 @@ export function UploadDialog({ categories, onClose, onUploaded, open, session, i
     setDone(true);
     setTimeout(() => { onUploaded(); onClose(); }, 900);
   }
+  // Keep ref current so the initialFile effect can call doUpload without
+  // declaring it as a dependency (which would cause spurious re-runs).
+  doUploadRef.current = doUpload;
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
