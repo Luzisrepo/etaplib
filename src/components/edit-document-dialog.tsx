@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import { Edit3, Loader2, Save, X } from "lucide-react";
+import { Edit3, Loader2, Save, X, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { StatusCallout } from "@/components/ui/status-callout";
@@ -20,6 +20,7 @@ export function EditDocumentDialog({ categories, document, onClose, onSaved }: P
   const [catId, setCatId]     = useState("");
   const [tags, setTags]       = useState("");
   const [tagError, setTagError] = useState<string | null>(null);
+  const [expiryDate, setExpiry] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState<string | null>(null);
 
@@ -29,6 +30,7 @@ export function EditDocumentDialog({ categories, document, onClose, onSaved }: P
     setDesc(document.description ?? "");
     setCatId(document.category_id ?? "");
     setTags(tagsToInput(document.tags));
+    setExpiry(document.expiry_date ? document.expiry_date.split("T")[0] : "");
     setError(null);
   }, [document]);
 
@@ -53,15 +55,32 @@ export function EditDocumentDialog({ categories, document, onClose, onSaved }: P
 
     const parsed = parseTags(tags);
     const cat = catId || null;
+    const expiry = expiryDate ? new Date(expiryDate).toISOString() : null;
+
     const { error: err } = await supabase.from("documents")
-      .update({ title: title.trim(), description: desc.trim() || null, category_id: cat, tags: parsed })
+      .update({
+        title: title.trim(),
+        description: desc.trim() || null,
+        category_id: cat,
+        tags: parsed,
+        expiry_date: expiry,
+      })
       .eq("id", document.id);
 
     setLoading(false);
     if (err) { setError(err.message); return; }
 
     const updatedCat = cat ? (categories.find(c => c.id === cat) ?? null) : null;
-    onSaved({ ...document, title: title.trim(), description: desc.trim() || null, category_id: cat, category: updatedCat, tags: parsed, updated_at: new Date().toISOString() });
+    onSaved({
+      ...document,
+      title: title.trim(),
+      description: desc.trim() || null,
+      category_id: cat,
+      category: updatedCat,
+      tags: parsed,
+      expiry_date: expiry,
+      updated_at: new Date().toISOString()
+    });
   }
 
   function handleDescChange(val: string) {
@@ -119,6 +138,45 @@ export function EditDocumentDialog({ categories, document, onClose, onSaved }: P
             </Field>
           </div>
 
+          <div className="grid gap-5 sm:grid-cols-2">
+            {/* Expiry Date */}
+            <Field label={t("expiryDateLabel")} hint={t("expiryDateHelp")}>
+              <div className="relative">
+                <Calendar size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--fg-3)]" />
+                <Input
+                  type="date"
+                  className="pl-10"
+                  value={expiryDate}
+                  onChange={(e) => setExpiry(e.target.value)}
+                  min={new Date().toISOString().split("T")[0]}
+                />
+              </div>
+            </Field>
+
+            {/* Tags */}
+            <Field label={t("uploadDialogFieldTags")} hint={t("uploadDialogFieldTagsHint")}>
+              <Input
+                value={tags}
+                onChange={e => handleTagsChange(e.target.value)}
+                placeholder="redes, exercicios, revisao"
+                className={tagError ? "border-[var(--red)] focus:border-[var(--red)]" : ""}
+              />
+            </Field>
+          </div>
+
+          <div className="flex items-start justify-between gap-2 mt-1">
+            {tagError ? (
+              <p className="mono text-[11px] font-medium text-[var(--red)]">{tagError}</p>
+            ) : (
+              <p className="mono text-[11px] text-[var(--fg-3)]">
+                {t("uploadDialogTagsHintText", { maxChars: TAG_MAX_CHARS, maxCount: TAG_MAX_COUNT })}
+              </p>
+            )}
+            <p className="mono text-[11px] text-[var(--fg-3)] shrink-0">
+              {parseTags(tags).length}/{TAG_MAX_COUNT}
+            </p>
+          </div>
+
           <Field label={t("uploadDialogFieldDescription")}>
             <Textarea
               value={desc}
@@ -126,27 +184,6 @@ export function EditDocumentDialog({ categories, document, onClose, onSaved }: P
               className={descError ? "border-[var(--red)] focus:border-[var(--red)]" : ""}
             />
             {descError && <p className="mono text-[11px] font-medium text-[var(--red)] mt-1">{descError}</p>}
-          </Field>
-
-          <Field label={t("uploadDialogFieldTags")} hint={t("uploadDialogFieldTagsHint")}>
-            <Input
-              value={tags}
-              onChange={e => handleTagsChange(e.target.value)}
-              placeholder="redes, exercicios, revisao"
-              className={tagError ? "border-[var(--red)] focus:border-[var(--red)]" : ""}
-            />
-            <div className="flex items-start justify-between gap-2 mt-1">
-              {tagError ? (
-                <p className="mono text-[11px] font-medium text-[var(--red)]">{tagError}</p>
-              ) : (
-                <p className="mono text-[11px] text-[var(--fg-3)]">
-                  {t("uploadDialogTagsHintText", { maxChars: TAG_MAX_CHARS, maxCount: TAG_MAX_COUNT })}
-                </p>
-              )}
-              <p className="mono text-[11px] text-[var(--fg-3)] shrink-0">
-                {parseTags(tags).length}/{TAG_MAX_COUNT}
-              </p>
-            </div>
           </Field>
 
           {error && <StatusCallout kind="error">{error}</StatusCallout>}

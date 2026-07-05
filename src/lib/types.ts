@@ -43,7 +43,15 @@ export type ReadingList = {
   user_id: string;
   name: string;
   description: string | null;
+  category_id: string | null;
+  is_required: boolean;
   created_at: string;
+};
+
+export type ReadingListWithDocs = ReadingList & {
+  category?: Category | null;
+  documents?: LibraryDocument[];
+  owner?: { email: string; full_name: string | null } | null;
 };
 
 export type UserSession = {
@@ -84,6 +92,7 @@ export type DocumentRow = {
   mime_type: string;
   file_size: number;
   tags: string[];
+  expiry_date: string | null;
   created_at: string;
   updated_at: string;
 };

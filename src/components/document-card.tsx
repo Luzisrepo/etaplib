@@ -3,13 +3,14 @@
 import { useRef, useState } from "react";
 import {
   Archive, Check, Copy, Download, Edit3, ExternalLink, File,
-  FileText, Image as ImageIcon, Loader2, Presentation, Trash2, Video
+  FileText, Image as ImageIcon, Loader2, Presentation, Trash2, Video, Calendar
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import type { LibraryDocument } from "@/lib/types";
 import { cn, formatBytes, formatRelativeDate, getInitials } from "@/lib/utils";
 import { useLanguage } from "@/lib/language-context";
+import { recordDownload } from "@/lib/analytics";
 
 type Props = {
   document: LibraryDocument;
@@ -30,6 +31,11 @@ export function DocumentCard({ document, isOwner, onDeleted, onEdit, onSelect, c
   const cardRef = useRef<HTMLElement>(null);
   const Icon = fileIcon(document.mime_type, document.file_name);
 
+  const isExpired = document.expiry_date ? new Date(document.expiry_date) < new Date() : false;
+  const expiryDateFormatted = document.expiry_date 
+    ? new Date(document.expiry_date).toLocaleDateString()
+    : null;
+
   async function openUrl(mode: "view" | "dl") {
     setBusy(mode);
     setError(null);
@@ -38,6 +44,10 @@ export function DocumentCard({ document, isOwner, onDeleted, onEdit, onSelect, c
       .createSignedUrl(document.file_path, 120, mode === "dl" ? { download: document.file_name } : undefined);
     setBusy(null);
     if (e || !data?.signedUrl) { setError(e?.message ?? t("docCardLinkError")); return; }
+    
+    // Log download analytics
+    void recordDownload(document.id, document.owner_id);
+
     window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   }
 
@@ -50,6 +60,9 @@ export function DocumentCard({ document, isOwner, onDeleted, onEdit, onSelect, c
       await navigator.clipboard.writeText(data.signedUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+
+      // Log download analytics (counting copy link as sharing/viewing)
+      void recordDownload(document.id, document.owner_id);
     } catch {
       setError(t("docCardLinkCopyError"));
     }
@@ -99,6 +112,12 @@ export function DocumentCard({ document, isOwner, onDeleted, onEdit, onSelect, c
         </div>
 
         <span className="flex-1 truncate text-sm font-medium text-[var(--fg)]">{document.title}</span>
+
+        {isExpired && (
+          <span className="mono text-[9px] font-bold uppercase text-[var(--red)] border border-[var(--red)]/35 bg-[var(--red-bg)] px-1.5 py-0.5 rounded mr-2">
+            {t("expiredBadge")}
+          </span>
+        )}
 
         {document.category && (
           <span className="mono hidden sm:flex items-center gap-1 text-[10px] text-[var(--fg-3)]">
@@ -183,6 +202,19 @@ export function DocumentCard({ document, isOwner, onDeleted, onEdit, onSelect, c
               </Badge>
             )}
             {isOwner && <Badge variant="blue">{t("docCardOwnerBadge")}</Badge>}
+            
+            {isExpired && (
+              <span className="mono text-[9px] font-bold uppercase text-[var(--red)] border border-[var(--red)]/35 bg-[var(--red-bg)] px-1.5 py-0.5 rounded">
+                {t("expiredBadge")}
+              </span>
+            )}
+
+            {!isExpired && expiryDateFormatted && (
+              <span className="mono flex items-center gap-1 text-[10px] text-[var(--amber)] border border-[var(--amber)]/35 bg-[var(--amber-bg)] px-1.5 py-0.5 rounded" title={t("expiryDateHelp")}>
+                <Calendar size={10} />
+                <span>{t("expiryBadge", { date: expiryDateFormatted })}</span>
+              </span>
+            )}
           </div>
 
           {document.description && (

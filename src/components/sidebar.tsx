@@ -34,7 +34,7 @@ export function Sidebar({ activeCategory, activeTag, categories, isOpen, onCateg
   const initials = getInitials(email, fullName);
   const avatarUrl = profile?.avatar_url;
   const role = profile?.role ?? "member";
-  const showAdmin = isAdminEmail(session.user.email);
+  const showAdmin = role === "admin" || role === "teacher" || isAdminEmail(session.user.email);
   const showGrant = isStaff(role);
   const showManagement = showAdmin || showGrant;
 

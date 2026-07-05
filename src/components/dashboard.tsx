@@ -2,40 +2,53 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { FileUp, Upload, X } from "lucide-react";
-import { AdminPanel } from "@/components/admin-panel";
-import { BackToTop } from "@/components/back-to-top";
-import { DocumentCard } from "@/components/document-card";
-import { DocumentViewDialog } from "@/components/document-view-dialog";
-import { EditDocumentDialog } from "@/components/edit-document-dialog";
-import { GrantRoleDialog } from "@/components/grant-role-dialog";
-import { ShortcutsDialog } from "@/components/shortcuts-dialog";
-import { Sidebar } from "@/components/sidebar";
-import { SortViewBar, type SortField, type SortDir, type ViewMode } from "@/components/sort-view-bar";
-import { Topbar } from "@/components/topbar";
-import { UploadDialog } from "@/components/upload-dialog";
-import { SettingsDialog } from "@/components/settings-dialog";
+import { FileUp, Loader2, Upload, X, BookOpen, FileText, ChevronRight, ChevronDown, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusCallout } from "@/components/ui/status-callout";
+import { Sidebar } from "@/components/sidebar";
+import { Topbar } from "@/components/topbar";
+import { SortViewBar } from "@/components/sort-view-bar";
+import { DocumentCard } from "@/components/document-card";
+import { UploadDialog } from "@/components/upload-dialog";
+import { EditDocumentDialog } from "@/components/edit-document-dialog";
+import { DocumentViewDialog } from "@/components/document-view-dialog";
+import { AdminPanel } from "@/components/admin-panel";
+import { GrantRoleDialog } from "@/components/grant-role-dialog";
+import { ShortcutsDialog } from "@/components/shortcuts-dialog";
+import { BackToTop } from "@/components/back-to-top";
+import { SettingsDialog } from "@/components/settings-dialog";
 import { useToast } from "@/components/toast";
 import { supabase } from "@/lib/supabase";
-import type { Category, LibraryDocument, Profile } from "@/lib/types";
+import type { Category, LibraryDocument, Profile, ReadingListWithDocs } from "@/lib/types";
 import { formatBytes } from "@/lib/utils";
 import { useLanguage } from "@/lib/language-context";
 
-export function Dashboard({ session }: { session: Session }) {
-  const { t } = useLanguage();
-  const { toast } = useToast();
+type SortField = "date" | "title" | "size" | "type";
+type SortDir = "asc" | "desc";
+type ViewMode = "list" | "compact";
 
-  const [documents, setDocuments]           = useState<LibraryDocument[]>([]);
+type Props = {
+  session: Session;
+};
+
+export function Dashboard({ session }: Props) {
+  const { toast } = useToast();
+  const { t } = useLanguage();
   const [categories, setCategories]         = useState<Category[]>([]);
+  const [documents, setDocuments]           = useState<LibraryDocument[]>([]);
+  const [readingLists, setReadingLists]     = useState<ReadingListWithDocs[]>([]);
+  const [expandedListId, setExpandedList]   = useState<string | null>(null);
   const [profile, setProfile]               = useState<Profile | null>(null);
+  const [loading, setLoading]               = useState(true);
+  const [error, setError]                   = useState<string | null>(null);
+
+  // Filter states
   const [query, setQuery]                   = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [activeTag, setActiveTag]           = useState("all");
-  const [loading, setLoading]               = useState(true);
-  const [error, setError]                   = useState<string | null>(null);
+
+  // Dialog open states
   const [uploadOpen, setUploadOpen]         = useState(false);
   const [editing, setEditing]               = useState<LibraryDocument | null>(null);
   const [sidebarOpen, setSidebarOpen]       = useState(false);
@@ -57,20 +70,47 @@ export function Dashboard({ session }: { session: Session }) {
   const loadData = useCallback(async (silent = false) => {
     if (!silent) setLoading(true);
     setError(null);
-    const [cats, docs, prof] = await Promise.all([
-      supabase.from("categories").select("*").order("name"),
-      supabase.from("documents")
-        .select("*, category:categories(*), owner:profiles(id,email,full_name,avatar_url)")
-        .order("created_at", { ascending: false }),
-      supabase.from("profiles").select("*").eq("id", session.user.id).single()
-    ]);
-    if (cats.error)  { setError(cats.error.message);  setLoading(false); return; }
-    if (docs.error)  { setError(docs.error.message);  setLoading(false); return; }
+    try {
+      const [cats, docs, prof, lists, links] = await Promise.all([
+        supabase.from("categories").select("*").order("name"),
+        supabase.from("documents")
+          .select("*, category:categories(*), owner:profiles(id,email,full_name,avatar_url)")
+          .order("created_at", { ascending: false }),
+        supabase.from("profiles").select("*").eq("id", session.user.id).single(),
+        supabase.from("reading_lists")
+          .select(`
+            *,
+            category:categories(*),
+            owner:profiles(email, full_name)
+          `)
+          .order("created_at", { ascending: false }),
+        supabase.from("reading_list_documents").select("*")
+      ]);
 
-    setCategories((cats.data ?? []) as Category[]);
-    setDocuments((docs.data ?? []) as LibraryDocument[]);
-    if (prof.data) setProfile(prof.data as Profile);
-    setLoading(false);
+      if (cats.error) throw cats.error;
+      if (docs.error) throw docs.error;
+
+      const loadedDocs = (docs.data ?? []) as LibraryDocument[];
+      setCategories((cats.data ?? []) as Category[]);
+      setDocuments(loadedDocs);
+      if (prof.data) setProfile(prof.data as Profile);
+
+      // Process Reading Lists in memory to link document references
+      const listsData = (lists.data ?? []) as unknown as ReadingListWithDocs[];
+      const linksData = (links.data ?? []) as Array<{ reading_list_id: string; document_id: string }>;
+
+      for (const list of listsData) {
+        const docIds = linksData
+          .filter(lnk => lnk.reading_list_id === list.id)
+          .map(lnk => lnk.document_id);
+        list.documents = loadedDocs.filter(doc => docIds.includes(doc.id));
+      }
+      setReadingLists(listsData);
+    } catch (e: any) {
+      setError(e.message || "Erro ao carregar os dados.");
+    } finally {
+      setLoading(false);
+    }
   }, [session.user.id]);
 
   useEffect(() => { void loadData(); }, [loadData]);
@@ -107,7 +147,6 @@ export function Dashboard({ session }: { session: Session }) {
 
   useEffect(() => {
     function handler(e: KeyboardEvent) {
-      // Skip when typing in an input
       if ((e.target as HTMLElement)?.closest("input, textarea, [contenteditable]")) return;
       if (e.key === "u" || e.key === "U") { e.preventDefault(); setUploadOpen(true); }
       if (e.key === "r" || e.key === "R") { e.preventDefault(); handleRefresh(); }
@@ -158,7 +197,6 @@ export function Dashboard({ session }: { session: Session }) {
         && (activeTag === "all" || d.tags.includes(activeTag));
     });
 
-    // Sort
     return [...base].sort((a, b) => {
       let cmp = 0;
       switch (sortField) {
@@ -178,13 +216,18 @@ export function Dashboard({ session }: { session: Session }) {
     categories: categories.length,
   }), [documents, categories, session.user.id]);
 
+  const activeReadingLists = useMemo(() => {
+    return readingLists.filter(list => 
+      (activeCategory === "all" || list.category_id === activeCategory)
+      && (list.documents?.length || 0) > 0
+    );
+  }, [readingLists, activeCategory]);
+
   const hasFilters = !!(query || activeCategory !== "all" || activeTag !== "all");
 
   const currentCatName = activeCategory === "all"
     ? t("dashboardAllMaterialsHeader")
     : categories.find(c => c.id === activeCategory)?.name ?? t("dashboardDefaultHeader");
-
-  // ── Render ───────────────────────────────────────────────────────────────
 
   return (
     <div className="relative z-10 min-h-screen text-[var(--fg)]">
@@ -193,9 +236,9 @@ export function Dashboard({ session }: { session: Session }) {
         activeTag={activeTag}
         categories={categories}
         isOpen={sidebarOpen}
-        onCategoryChange={c => { setActiveCategory(c); setSidebarOpen(false); }}
+        onCategoryChange={c => { setActiveCategory(c); setSidebarOpen(false); setExpandedList(null); }}
         onClose={() => setSidebarOpen(false)}
-        onTagChange={tag => { setActiveTag(tag); setSidebarOpen(false); }}
+        onTagChange={tag => { setActiveTag(tag); setSidebarOpen(false); setExpandedList(null); }}
         onSignOut={() => supabase.auth.signOut()}
         onEditProfile={() => { setSettingsOpen(true); }}
         onAdmin={() => setAdminOpen(true)}
@@ -235,7 +278,7 @@ export function Dashboard({ session }: { session: Session }) {
             </div>
             {hasFilters && (
               <button
-                onClick={() => { setQuery(""); setActiveCategory("all"); setActiveTag("all"); }}
+                onClick={() => { setQuery(""); setActiveCategory("all"); setActiveTag("all"); setExpandedList(null); }}
                 className="mono flex items-center gap-1.5 rounded-md border border-[var(--border)] px-2.5 py-1.5 text-[11px] text-[var(--fg-2)] transition-all hover:border-[var(--border-2)] hover:text-[var(--fg)] active:scale-95 anim-fade-in"
               >
                 <X size={12} /> {t("dashboardClearFilters")}
@@ -243,7 +286,68 @@ export function Dashboard({ session }: { session: Session }) {
             )}
           </div>
 
-          {/* Sort & View bar — only show when there's something to sort */}
+          {/* Related Reading Lists Section */}
+          {!loading && activeReadingLists.length > 0 && (
+            <div className="mb-6 space-y-3 anim-fade-up">
+              <h3 className="mono text-[10px] font-bold uppercase tracking-widest text-[var(--fg-3)] flex items-center gap-2">
+                <BookOpen size={12} className="text-[var(--accent)]" />
+                {t("readingListsTab")}
+              </h3>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {activeReadingLists.map(list => {
+                  const isExpanded = expandedListId === list.id;
+                  return (
+                    <div key={list.id} className="rounded-lg border border-[var(--border)] bg-[var(--bg-2)] overflow-hidden transition-all duration-150">
+                      <div 
+                        onClick={() => setExpandedList(isExpanded ? null : list.id)}
+                        className="flex items-start justify-between gap-3 p-3.5 cursor-pointer hover:bg-[var(--bg-3)] select-none"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-[var(--fg)]">{list.name}</span>
+                            {list.is_required ? (
+                              <span className="mono text-[8px] font-bold px-1.5 py-0.5 rounded bg-[var(--red-bg)] text-[var(--red)] border border-[var(--red)]/20 uppercase flex items-center gap-0.5">
+                                <Award size={8} />
+                                {t("readingListRequiredBadge")}
+                              </span>
+                            ) : (
+                              <span className="mono text-[8px] font-bold px-1.5 py-0.5 rounded bg-[var(--bg-3)] text-[var(--fg-3)] border border-[var(--border)] uppercase">
+                                {t("readingListRecommendedBadge")}
+                              </span>
+                            )}
+                          </div>
+                          {list.description && (
+                            <p className="text-xs text-[var(--fg-2)] line-clamp-1">{list.description}</p>
+                          )}
+                        </div>
+                        <div className="text-[var(--fg-3)] mt-0.5">
+                          {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                        </div>
+                      </div>
+
+                      {isExpanded && list.documents && (
+                        <div className="border-t border-[var(--border)] bg-[var(--bg)] p-2 space-y-1 max-h-56 overflow-y-auto">
+                          {list.documents.map(doc => (
+                            <div 
+                              key={doc.id}
+                              onClick={() => setMaximizedDoc(doc)}
+                              className="flex items-center gap-2 p-2 rounded hover:bg-[var(--bg-3)] cursor-pointer text-xs transition-colors"
+                            >
+                              <FileText size={14} className="text-[var(--accent)] shrink-0" />
+                              <span className="truncate text-[var(--fg)] font-medium" title={doc.title}>{doc.title}</span>
+                              <span className="mono text-[9px] text-[var(--fg-3)] ml-auto shrink-0">{formatBytes(doc.file_size)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Sort & View bar */}
           {!loading && filtered.length > 0 && (
             <SortViewBar
               sortField={sortField}
@@ -293,7 +397,7 @@ export function Dashboard({ session }: { session: Session }) {
               description={hasFilters ? t("dashboardEmptyDescFilters") : t("dashboardEmptyDescNoMaterials")}
               action={
                 hasFilters
-                  ? <Button onClick={() => { setQuery(""); setActiveCategory("all"); setActiveTag("all"); }}>{t("dashboardEmptyBtnClear")}</Button>
+                  ? <Button onClick={() => { setQuery(""); setActiveCategory("all"); setActiveTag("all"); setExpandedList(null); }}>{t("dashboardEmptyBtnClear")}</Button>
                   : <Button variant="primary" onClick={() => setUploadOpen(true)}><FileUp size={16} />{t("dashboardEmptyBtnUpload")}</Button>
               }
             />
@@ -360,7 +464,6 @@ export function Dashboard({ session }: { session: Session }) {
         />
       )}
       {!profile && settingsOpen && (
-        /* Fallback while profile loads: render headless so onClose still works */
         <SettingsDialog
           open={settingsOpen}
           onClose={() => setSettingsOpen(false)}
@@ -370,7 +473,7 @@ export function Dashboard({ session }: { session: Session }) {
           onProfileSaved={() => {}}
         />
       )}
-      <AdminPanel open={adminOpen} onClose={() => setAdminOpen(false)} session={session} />
+      <AdminPanel open={adminOpen} onClose={() => setAdminOpen(false)} session={session} categories={categories} />
       <GrantRoleDialog
         open={grantOpen}
         onClose={() => setGrantOpen(false)}

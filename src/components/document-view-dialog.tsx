@@ -13,6 +13,7 @@ import { supabase } from "@/lib/supabase";
 import type { LibraryDocument } from "@/lib/types";
 import { formatBytes, formatRelativeDate, getInitials } from "@/lib/utils";
 import { useLanguage } from "@/lib/language-context";
+import { recordDownload } from "@/lib/analytics";
 
 // ── Discord-like formatting parser ───────────────────────────────────────────
 
@@ -201,6 +202,7 @@ export function DocumentViewDialog({
 
       if (data?.signedUrl) {
         setPreviewUrl(data.signedUrl);
+        void recordDownload(document.id, document.owner_id);
         if (isCode) {
           try {
             const res = await fetch(data.signedUrl);
@@ -243,6 +245,7 @@ export function DocumentViewDialog({
       .createSignedUrl(document.file_path, 120, mode === "dl" ? { download: document.file_name } : undefined);
     setBusy(null);
     if (e || !data?.signedUrl) { setError(e?.message ?? t("viewDialogSecureLinkError")); return; }
+    void recordDownload(document.id, document.owner_id);
     window.open(data.signedUrl, "_blank", "noopener,noreferrer");
   }
 
