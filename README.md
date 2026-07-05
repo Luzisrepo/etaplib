@@ -1,191 +1,135 @@
 # Manual de Arquitetura e Funcionamento - ETAP Biblioteca
 
-Este documento apresenta a especificação técnica e o manual de funcionamento do sistema ETAP Biblioteca. Foi elaborado de forma a descrever detalhadamente todas as tecnologias, componentes e fluxos operacionais da aplicação, servindo como guia de integração tanto para programadores iniciantes como para utilizadores que pretendam compreender a arquitetura subjacente.
+Este documento apresenta a especificação técnica e o manual de funcionamento do sistema ETAP Biblioteca. Foi elaborado para descrever detalhadamente as tecnologias, componentes e fluxos operacionais da aplicação, servindo como guia para programadores e utilizadores.
 
 ---
 
 ## 1. Descrição Geral do Sistema
 
-A ETAP Biblioteca é uma plataforma web orientada para a partilha, organização e centralização de recursos pedagógicos e materiais de estudo, tais como documentos em formato PDF, vídeos, apresentações e arquivos comprimidos.
+A ETAP Biblioteca é uma plataforma web para partilha, organização e centralização de recursos pedagógicos e materiais de estudo. Suporta múltiplos formatos (PDFs, imagens, vídeos, arquivos e código-fonte) com capacidades avançadas de visualização integradas.
 
-Os pilares fundamentais da plataforma incluem:
-* **Autenticação Institucional:** O registo e início de sessão são restritos a utilizadores com endereços de correio eletrónico associados ao domínio institucional @etap.pt.
-* **Segurança de Autoria (Row Level Security - RLS):** Garante-se que todos os utilizadores autenticados possam ler e descarregar os materiais, mas apenas o utilizador que efetuou o carregamento (dono do recurso) possui permissões para modificar ou eliminar os respetivos registos e ficheiros.
-* **Personalização de Interface Avançada:** O sistema disponibiliza uma experiência altamente customizável através da alteração dinâmica de tipos de letra, dimensão do texto e aplicação de múltiplos temas visuais (incluindo temas com fundos gradientes animados).
+Principais pilares da plataforma:
+* **Autenticação Institucional:** Acesso restrito a contas com domínio `@etap.pt`.
+* **Segurança de Autoria (RLS):** Controlo de permissões rigoroso na base de dados, garantindo que apenas o proprietário pode editar ou remover recursos.
+* **Visualização Avançada:** Pré-visualização integrada de ficheiros multimédia e código-fonte diretamente na aplicação, minimizando downloads externos.
+* **Internacionalização (i18n):** Suporte nativo e comutável dinamicamente entre múltiplos idiomas (Português e Inglês).
+* **Personalização de Interface:** Controlo total e imediato sobre temas estéticos (escuros, claros ou animados), tipos de letra e dimensões textuais.
 
 ---
 
 ## 2. Pilha Tecnológica (Stack Tecnológico)
 
-O desenvolvimento da aplicação assenta numa arquitetura moderna de aplicações web de página única (Single Page Application - SPA) com renderização híbrida:
+Arquitetura moderna de Single Page Application (SPA) com renderização híbrida:
 
 | Componente | Tecnologia | Finalidade e Justificação Técnica |
 | :--- | :--- | :--- |
-| **Framework Principal** | Next.js 15 (React) | Permite estruturar o projeto com base em componentes reutilizáveis, beneficiando de renderização eficiente do lado do cliente através da diretiva `"use client"` e gestão inteligente de dependências. |
-| **Linguagem** | TypeScript | Introduz tipagem estática ao ecossistema JavaScript, mitigando erros em tempo de compilação, facilitando a autodescoberta de propriedades e melhorando a manutenibilidade do código. |
-| **Estilização** | Tailwind CSS | Framework de CSS utilitário para o desenvolvimento acelerado de interfaces responsivas. Facilita o mapeamento direto de variáveis de estilo personalizadas (CSS Variables) para controlo centralizado de temas. |
-| **Backend as a Service** | Supabase | Solução de infraestrutura que disponibiliza um serviço de autenticação de utilizadores, uma base de dados relacional PostgreSQL e um sistema de armazenamento de objetos em disco (Storage). |
-| **Biblioteca de Ícones** | Lucide React | Fornece uma coleção abrangente de vetores SVG expostos como componentes React, mantendo a consistência visual de toda a aplicação. |
-| **Integração 3D** | Spline Viewer | Componente autónomo para carregamento e renderização em tempo real de cenários tridimensionais no ecrã de entrada, proporcionando uma experiência imersiva e interativa. |
+| **Framework Principal** | Next.js 15 (React) | Renderização do lado do cliente (`use client`) e gestão eficiente de dependências num ecossistema moderno focado em performance. |
+| **Linguagem** | TypeScript | Tipagem estática, garantindo segurança em tempo de compilação e melhorando a autodescoberta e manutenção do código. |
+| **Estilização** | Tailwind CSS | Framework utilitária, perfeitamente acoplada e mapeada por variáveis CSS para permitir alterações e controlos dinâmicos de temas. |
+| **Backend as a Service** | Supabase | Infraestrutura integral que fornece Autenticação, Base de Dados relacional PostgreSQL e Storage (armazenamento fiável de objetos físicos). |
+| **Biblioteca de Ícones** | Lucide React | Consistência visual através de componentes vetoriais SVG escaláveis e leves. |
+| **Visualizador 3D** | Spline Viewer | Integração independente no ecrã inicial para carregamento de modelos 3D interativos e envolventes. |
+| **Processamento de Código** | highlight.js & marked | Motores dedicados para deteção e colorização de sintaxe em tempo real (Syntax Highlighting) e renderização de formatações Markdown seguras (GFM). |
 
 ---
 
-## 3. Arquitetura de Ficheiros e Componentes Implementadas
+## 3. Funcionalidades Detalhadas
 
-O projeto organiza-se através de módulos complementares que interagem sistematicamente para gerir o estado global da aplicação:
+### 3.1. Gestão e Visualização de Documentos
+* **Carregamento (Upload):** Os utilizadores podem transferir ficheiros através de interações clássicas ou *drag-and-drop*. Inclui indicadores visuais de progresso percentual de transferência.
+* **Edição e Eliminação:** Apenas o autor original, com a sua conta validada, tem permissão de interface e de base de dados para alterar os metadados (como nome, descrição, categoria, tags) ou apagar o registo definitivo.
+* **Visualizador Multimédia Integrado:** 
+  * Imagens, vídeos e ficheiros PDF são apresentados nativamente dentro de um modal responsivo (`document-view-dialog.tsx`) não requerendo programas de terceiros.
+  * O acesso direto ao ficheiro é intermediado pela geração de "Signed URLs" temporários na API do Supabase Storage. Isto restringe acessos forjados ou atalhos indevidos.
 
-### Estrutura de Inicialização
+### 3.2. Visualizador Avançado de Código (Code Previewer)
+* **Deteção Multi-linguagem:** Identificação inteligente da linguagem pela extensão de ficheiro ou convenção de nome (ex: `Dockerfile`, `Makefile`), abrangendo dezenas de linguagens suportadas pelo `highlight.js`.
+* **Modo Expansível (Fullscreen):** Capacidade de expandir as linhas de código com um único clique de forma a preencher virtualmente toda a resolução útil do ecrã (`code-preview-overlay` via overlay), imitando um Editor IDE e suspendendo o rolamento (scroll) da página base.
+* **Integração de Markdown:** Para ficheiros `.md`, os utilizadores podem alternar instantaneamente entre a visualização do código-fonte não formatado (*Raw Source*) ou o documento renderizado.
+* **Ferramentas de Conveniência:** Integra cópia nativa instantânea para área de transferência (*clipboard*) e botão interativo de formatação para limites de linha (`Word Wrap`).
 
-#### layout.tsx e page.tsx
-* **layout.tsx:** Define a estrutura global do documento HTML, injetando as fontes tipográficas necessárias e garantindo o invólucro do viewport da aplicação.
-* **page.tsx:** Representa o ponto de entrada da rota raiz, sendo responsável por invocar o componente principal `<LibraryApp />`.
+### 3.3. Pesquisa e Navegação Inteligente
+* **Omnibox Dinâmica (Barra de Pesquisa Superior):** A pesquisa verifica paralela e simultaneamente títulos, descrições, extensões, categorias e *tags*. Os resultados preenchem imediatamente uma lista suspensa organizada logicamente.
+* **Atalhos e Acessibilidade:** Interface fluída navegável com teclas de direção (`Up/Down`), seleção direta (`Enter`) e retrocesso (`Esc`).
+* **Painel Informativo (Sidebar):** Contadores estatísticos que efetuam um inventário e mostram totais (contagem agregada e soma gigabytes) da conta local contra toda a plataforma. 
 
-#### library-app.tsx
-* **Gestão de Estado de Sessão:** Comunica diretamente com a API do Supabase para verificar se existe uma sessão ativa de utilizador aquando da inicialização da aplicação.
-* **Carregamento Assíncrono:** Apresenta um indicador visual de carregamento dinâmico ("a preparar...") enquanto as credenciais do utilizador são validadas.
-* **Encaminhamento de Acesso:** Se o utilizador não se encontrar autenticado, renderiza a página de login `<AuthPanel />`. Caso contrário, renderiza o ambiente principal `<Dashboard />`.
-* **Inicialização Estética:** Carrega as configurações de interface gravadas em persistência local (`localStorage`). Se o utilizador terminar a sessão, força a reposição para o tema padrão institucional.
-
----
-
-### Módulo de Acesso e Autenticação
-
-#### auth-panel.tsx
-* **Interface de Entrada:** Divide o ecrã em duas áreas lógicas principais. A área de visualização tridimensional dinamicamente carregada com a biblioteca Spline 3D (oculta em dispositivos móveis para preservação de largura de banda e capacidade de processamento) e o formulário de controlo de acessos.
-* **Validação de Mensagens:** Analisa os parâmetros de URL e os fragmentos de hash para identificar e expor mensagens de confirmação de email ou de erro retornadas pelo servidor de autenticação.
-
-#### auth-dialog.tsx
-* **Processamento de Credenciais:** Contém os formulários detalhados para os métodos de registo de novas contas e início de sessão de utilizadores existentes.
-* **Regras de Validação:** Restringe o envio de pedidos que não correspondam aos critérios definidos, informando claramente o utilizador através de notificações de estado em caso de falha de credenciais ou problemas de conectividade.
+### 3.4. Internacionalização (i18n) e Definições de Estilo (Settings)
+* **Tradução Local:** Recurso ao utilitário interno `useLanguage` suportado pelo inventário `translations.ts` que reflete num instante alterações vocabulares em toda a SPA sem obrigar a refrescos da rede.
+* **Memória Temática:** As preferências aplicadas (Tipografia Sans/Serif/Mono, tamanhos padronizados de texto `sm/base/lg` e esquemas visuais com ou sem gradientes animados em background) são mapeadas para o `document.documentElement` em variáveis CSS injetadas em tempo real e imortalizadas localmente via `localStorage`.
 
 ---
 
-### Módulo Principal do Dashboard
+## 4. Arquitetura de Componentes da Aplicação
 
-#### dashboard.tsx
-* **Coordenação de Dados:** Centraliza os pedidos de dados (fetch) e os respetivos estados de carregamento. Utiliza a paralelização de consultas à base de dados através de `Promise.all` para obter simultaneamente a informação dos documentos, das categorias e do perfil do utilizador.
-* **Pipeline de Filtragem:** Filtra dinamicamente em memória a lista de documentos com base em múltiplos critérios cumulativos: a pesquisa textual, a categoria de navegação ativa e a tag selecionada.
-* **Gestão de Eventos:** Define funções de retorno de chamada (callbacks) para atualizar a lista local de materiais imediatamente após operações de criação, modificação ou eliminação, evitando chamadas repetidas desnecessárias à rede.
+### Núcleo de Inicialização e Autenticação
+* `layout.tsx` / `page.tsx`: Fundações de entrada do React Next.js, incluindo o *wrapper* base com metadados HTML, classes fundamentais e definições font-face.
+* `library-app.tsx`: O cérebro controlador do estado. Deteta a existência de um *Token* do Supabase e encarrega-se do roteamento principal, servindo ecrãs de registo a não autenticados ou ativando a zona de trabalho àqueles com login válido.
+* `auth-panel.tsx` / `auth-dialog.tsx`: Formulários completos com submissões em lote à API, tratamento global de respostas de ecrã e *handlers* de verificação de conta ou reset de passwords.
 
-#### sidebar.tsx
-* **Painel Informativo Lateral:** Consolida a informação de navegação e as métricas do utilizador.
-* **Cálculo de Métricas:** Apresenta estatísticas obtidas em tempo real a partir dos documentos carregados, incluindo a contagem global, os ficheiros propriedade do utilizador logado e o volume de armazenamento somado de todos os ficheiros ativos.
-* **Listas de Navegação:** Exibe dinamicamente todas as categorias de materiais configuradas no sistema e renderiza as tags presentes nos materiais de forma a permitir uma navegação temática acelerada.
+### Interface de Utilização Central (Dashboard)
+* `dashboard.tsx`: Gestor da grelha documental de listagem. Sincroniza estados cruzados com o painel lateral para efetuar filtragens e emite `Promises.all` para chamadas eficientes em rede aquando do carregamento da montra de ficheiros e subcategorias.
+* `sidebar.tsx`: Acomoda os filtros principais interativos baseados nas *tags* submetidas por toda a plataforma.
+* `topbar.tsx`: Contém a zona utilitária superior que engloba perfis de utilizador (`Avatar` interativo e logout) e a pesquisa inteligente.
 
-#### topbar.tsx
-* **Barra de Navegação Superior:** Aloja as ações imediatas e a barra de pesquisa do utilizador.
-* **Pesquisa Avançada com Autocompletar:** Implementa uma lógica de correspondência que varre em tempo real a coleção de documentos (pesquisando em títulos, descrições e nomes de ficheiros), a lista de categorias e a coleção de tags para gerar sugestões divididas em secções bem identificadas.
-* **Navegação via Teclado:** Suporta o manuseamento completo através das teclas direcionais (setas superior e inferior), tecla `Enter` para confirmação e tecla `Escape` para encerramento do painel de sugestões.
-
----
-
-### Módulo de Documentação e Ficheiros
-
-#### document-card.tsx
-* **Representação de Recursos:** Expõe de forma estruturada os metadados de cada recurso físico guardado, incluindo o tipo de ficheiro, tamanho legível, data de registo e o autor que o partilhou.
-* **Segurança na Transferência:** Realiza chamadas à API do Supabase Storage para obter links de acesso temporários e assinados para a leitura ou descarga dos recursos, impedindo a exposição pública e direta dos caminhos internos de armazenamento.
-* **Controlo de Permissões Visual:** Exibe os controlos de edição e remoção exclusivamente se o identificador do utilizador autenticado for correspondente ao do criador do registo.
-
-#### upload-dialog.tsx
-* **Carregamento de Novos Recursos:** Gere o ciclo de envio de ficheiros para a infraestrutura do Supabase.
-* **Área de Transferência:** Fornece um painel de interação baseado em arrastamento com indicação de progresso de upload em tempo real (em formato percentual).
-* **Validações do Lado do Cliente:** Impede a submissão de ficheiros vazios ou que ultrapassem o limite regulamentar estipulado de 500 Megabytes por ficheiro.
+### Operações e Visualização de Ficheiros
+* `document-card.tsx`: Estrutura padronizada (cartão com sombra, rodapé metadados, selos visuais). Expõe interfaces dinâmicas restritas ao autor do ficheiro para aceder a modais de deleção ou gestão de ficheiro.
+* `document-view-dialog.tsx`: Um contentor Modal com arquitetura reativa que, perante chamadas de pré-visualização ou downloads, inspeciona o `mime_type` providenciado para despachar o renderizador específico (IFrame PDF, tag de Video, Imagem). Transita elegantemente de metragens estreitas para espaços mais alongados se invocado para visualizar trechos de código.
+* `code-preview.tsx`: Focado estritamente na leitura otimizada de linguagens formais e estruturadas. Renderiza via `dangerouslySetInnerHTML` após aplicar *parsers* (Highlight e Marked), controlando localmente estados de visualização integral e quebra de linhas para legibilidade ininterrupta.
+* `upload-dialog.tsx`: Valida aspetos estruturais de um pedido de ficheiro como dimensão máxima e preenchimento de campos essenciais (título, descrição, categorias em dropdown), enviando sequencialmente os dados transacionais para o *Storage Bucket* e depois para o *Database Table*.
 
 ---
 
-## 4. Persistência de Dados e Segurança do Backend
+## 5. Persistência de Dados e Segurança do Backend (RLS)
 
-A segurança da plataforma é controlada de forma estrita e centralizada na infraestrutura de backend da base de dados PostgreSQL, mitigando riscos de segurança mesmo que a aplicação cliente seja comprometida:
+A base de dados Postgres alavancada no Supabase encarrega-se de blindar de forma hermética a segurança global da solução, empregando `Row Level Security` (RLS). Com isto, as API REST em GraphQL tornam-se virtualmente imunes a comandos maliciosos diretos.
 
-### Políticas de Segurança ao Nível da Linha (Row Level Security - RLS)
-A base de dados possui regras declarativas que definem os direitos de acesso de cada utilizador:
-
+**Exemplo das Políticas de Acesso Declaradas:**
 ```sql
--- Exemplo conceptual da política RLS aplicada na tabela de documentos
-
--- 1. Qualquer utilizador autenticado pode consultar materiais
+-- 1. Qualquer utilizador autenticado pode consultar materiais (DQL Universal)
 CREATE POLICY "Permitir leitura global a utilizadores autenticados" 
-ON public.documents FOR SELECT 
-TO authenticated 
-USING (true);
+ON public.documents FOR SELECT TO authenticated USING (true);
 
--- 2. Qualquer utilizador autenticado pode inserir novos registos
+-- 2. Qualquer utilizador autenticado pode inserir novos registos (DML Criação)
 CREATE POLICY "Permitir inserção a utilizadores autenticados" 
-ON public.documents FOR INSERT 
-TO authenticated 
-WITH CHECK (auth.uid() = owner_id);
+ON public.documents FOR INSERT TO authenticated WITH CHECK (auth.uid() = owner_id);
 
--- 3. Apenas o autor do registo pode atualizar ou remover o mesmo
+-- 3. Apenas o autor do registo pode atualizar ou remover o mesmo (DML Modificação)
 CREATE POLICY "Permitir modificação apenas ao proprietário" 
-ON public.documents FOR ALL 
-TO authenticated 
-USING (auth.uid() = owner_id)
-WITH CHECK (auth.uid() = owner_id);
+ON public.documents FOR ALL TO authenticated USING (auth.uid() = owner_id) WITH CHECK (auth.uid() = owner_id);
 ```
 
-Este modelo descentralizado de controlo garante que as operações de escrita dependam exclusivamente da identidade validada pelo token de segurança gerado no ato de autenticação.
-
----
-
-## 5. Funcionamento do Motor de Estilos e Customização Dinâmica
-
-A aplicação recorre a um mapeamento dinâmico de variáveis CSS para aplicar os diversos temas estéticos.
-
-### Estrutura de Gestão de Temas (settings.ts)
-Cada tema possui um conjunto específico de mapeamento de variáveis, aplicado diretamente ao elemento raiz do documento HTML (`document.documentElement`):
-
-```typescript
-export const THEMES: ThemeDef[] = [
-  {
-    id: "etap-default",
-    label: "Etap Default",
-    description: "GitHub-brutalist dark palette",
-    swatch: "#2f81f7",
-    bgSwatch: "#0d1117",
-    vars: {
-      "--bg":       "#0d1117",
-      "--bg-2":     "#161b22",
-      "--border":   "#30363d",
-      "--fg":       "#e6edf3",
-      "--accent":   "#2f81f7",
-    },
-  },
-  // Outros temas da aplicação
-];
-```
-
-### Processamento de Temas Gradientes (Aurora, Dusk, Synthwave, Prism)
-* **Ativação:** Quando um tema gradiente é selecionado, a aplicação adiciona a classe `gradient-active` ao elemento `body` do documento.
-* **Transição Fluida:** É executada uma animação keyframe (`background-position` e `background-size`) que movimenta o gradiente ao longo do fundo da aplicação de forma impercetível e contínua.
-* **Transparência de Painéis:** Os painéis laterais e superiores ajustam automaticamente os seus valores de opacidade através do mapeamento de classes dinâmicas, permitindo a visibilidade controlada do gradiente de fundo sem comprometer a legibilidade do texto.
+As políticas garantem que a modificação dos dados depende de fatores de avaliação da identidade do requerente encriptada no *Token JWT* emitido em cada sessão autenticada.
 
 ---
 
 ## 6. Fluxo Geral de Navegação e Interação
 
-O diagrama seguinte descreve a sequência lógica de operações efetuadas na plataforma:
+O diagrama em formato de grafo direcionado aprofunda o processo transacional completo de um utilizador no ecossistema:
 
 ```mermaid
 graph TD
-    A[Início do Acesso] --> B{Existe Sessão Ativa?}
-    B -- Não --> C[Apresentação do AuthPanel com Integração 3D]
-    C --> D[Submissão do Formulário de Registo/Login]
-    D --> E[Validação de Credenciais no Supabase]
-    E --> F[Injeção do Token de Acesso]
+    A[Início do Acesso Web] --> B{Existe Sessão JWT Ativa?}
+    B -- Não --> C[Apresentação do AuthPanel com Integração Spline 3D]
+    C --> D[Submissão do Formulário de Registo/Login Seguro]
+    D --> E[Validação Transacional pelo Supabase Auth]
+    E --> F[Injeção do Token de Acesso em Contexto Local]
     B -- Sim --> F
-    F --> G[Aplica Definições de Estilo do Utilizador]
-    G --> H[Pedidos Concorrentes: Documentos, Categorias e Perfis]
-    H --> I[Apresentação do Dashboard e Processamento de Filtros]
-    I --> J{Operação Pretendida}
-    J -- Carregamento --> K[UploadDialog: Validação de Metadados e Ficheiro]
-    K --> L[Upload para Supabase Storage + Escrita na Base de Dados]
+    F --> G[Aplica Definições Locais de Estética, Variáveis CSS e Idioma i18n]
+    G --> H[Pedidos de Dados Concorrentes: Documentos, Categorias e Perfis]
+    H --> I[Montagem da Interface Dashboard e Listagens Filtradas]
+    I --> J{Operação Desejada na Aplicação}
+    J -- Submissão Upload --> K[UploadDialog: Input Seguro Metadados e Check Ficheiro]
+    K --> L[Stream Ficheiro para Supabase Storage + Post Base de Dados]
     L --> H
-    J -- Consulta --> M[Pedido de URL Assinado para Abertura ou Download]
-    M --> O[Visualização do Material no Navegador]
-    J -- Gestão de Recurso --> P{O Utilizador é o Proprietário?}
-    P -- Sim --> Q[Edição ou Remoção Autorizada do Registo]
+    J -- Interação Leitura --> M[Request de URL Temporária Assinada no Storage]
+    M --> N{Processamento do Mime_Type}
+    N -- Ficheiro Lógico/Código --> O1[Redimensionamento Dinâmico no Code Previewer]
+    N -- Media Visual/PDF --> O2[Carregamento Direto em Tags HTML Nativas]
+    N -- Media Não Suportada --> O3[Acionador Exclusivo de Download via URL HTTP]
+    J -- Interação Administrativa --> P{O UUID do Utilizador == Propriedade?}
+    P -- Sim, são idênticos --> Q[Abertura Modais Edição Propriedades e Deleção]
     Q --> H
-    P -- Não --> R[Ação Bloqueada por Políticas de RLS]
+    P -- Não idênticos --> R[Restrição de Interface + Bloqueio Transacional via Backend RLS]
 ```
 
-Este fluxo integrado de componentes assegura uma experiência fluida, minimizando transferências de dados redundantes e otimizando a responsividade da ETAP Biblioteca em todos os cenários de utilização.
+Este fluxo global traduz a arquitetura defensiva e reativa que o sistema ETAP Biblioteca confere às operações diárias da plataforma, mantendo alta a estabilidade sem sacrificar a flexibilidade estática.
