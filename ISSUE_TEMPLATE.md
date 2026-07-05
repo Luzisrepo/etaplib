@@ -1,43 +1,68 @@
+---
 name: Bug report / Feature request
-about: Create a report to help us improve the ETAP Biblioteca
+about: Help us improve ETAP Biblioteca by reporting issues or suggesting features
 title: ''
 labels: ''
 assignees: ''
 
 ---
 
-**Please note**: Before opening an issue, make sure you are using the latest version and have searched existing issues to avoid duplicates.
+**Before opening**  
+- Ensure you are using the latest version of the application.  
+- Search existing issues to avoid duplicates.
 
 ---
 
 ## Summary
-<!-- Provide a clear and concise summary of the issue or feature request. -->
+<!-- Provide a clear, one‑sentence summary of the issue or request. -->
 
-## Expected Behavior
-<!-- What did you expect to happen? -->
+## Type of issue
+- [ ] Bug
+- [ ] Feature request
+- [ ] Documentation improvement
+- [ ] Other (please describe)
 
-## Actual Behavior
-<!-- What actually happened? If applicable, include error messages, screenshots, or logs. -->
+---
 
-## Steps to Reproduce (for bugs)
+## For Bug Reports Only
+
+### Expected Behaviour
+<!-- What should happen? -->
+
+### Actual Behaviour
+<!-- What actually happens? Include error messages, stack traces, or console logs. -->
+
+### Steps to Reproduce
 1. 
 2. 
 3. 
 
-## Environment
-- **Browser & version**: 
-- **OS**: 
-- **Node version**: 
-- **App version / commit SHA**: 
+### Environment
+- Browser & version:
+- Operating System:
+- App version (or commit SHA):
+- Device (if mobile/tablet):
 
-## Additional Context
-<!-- Add any other context about the problem here, e.g., related issues, suggestions for a fix, etc. -->
-
-## Feature Request (if applicable)
-- **Use Case**: 
-- **Proposed Solution**: 
-- **Alternative solutions considered**: 
+### Additional Context
+<!-- Add screenshots, video, or any other relevant details. -->
 
 ---
 
-**Thank you for your contribution!**
+## For Feature Requests Only
+
+### Problem / Use Case
+<!-- Describe the problem this feature would solve. -->
+
+### Proposed Solution
+<!-- Describe how you envision the feature working. -->
+
+### Alternatives Considered
+<!-- List any alternative approaches you have thought about. -->
+
+### Impact
+<!-- Which users or workflows would benefit from this feature? -->
+
+---
+
+## Additional Information
+<!-- Any other context you think might be useful. -->
