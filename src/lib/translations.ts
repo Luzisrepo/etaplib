@@ -189,6 +189,9 @@ export const translations = {
     codePreviewRawSource: "Fonte",
     codePreviewRendered: "Pré-visualização",
     codePreviewLines: "{count} linhas",
+    codePreviewWordWrap: "Quebrar linhas",
+    codePreviewExpand: "Expandir",
+    codePreviewCollapse: "Recolher",
 
     // ProfileEditorDialog
     profileEditorHeader: "Editar perfil",
@@ -640,6 +643,9 @@ export const translations = {
     codePreviewRawSource: "Source",
     codePreviewRendered: "Preview",
     codePreviewLines: "{count} lines",
+    codePreviewWordWrap: "Word wrap",
+    codePreviewExpand: "Expand",
+    codePreviewCollapse: "Collapse",
 
     // ProfileEditorDialog
     profileEditorHeader: "Edit profile",

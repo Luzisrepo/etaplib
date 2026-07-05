@@ -1,7 +1,10 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Check, Copy, AlertTriangle, Code2 } from "lucide-react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
+import {
+  Check, Copy, AlertTriangle, Code2, Maximize2, Minimize2,
+  WrapText, X,
+} from "lucide-react";
 import hljs from "highlight.js";
 import { marked } from "marked";
 import { useLanguage } from "@/lib/language-context";
@@ -67,7 +70,6 @@ export const CODE_EXTENSIONS = new Set(Object.keys(EXT_TO_LANG));
 /** Returns the highlight.js language for a filename, or null. */
 function detectLanguage(fileName: string): string | null {
   const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
-  // Handle extensionless names like "Dockerfile", "Makefile"
   const baseName = fileName.split("/").pop()?.toLowerCase() ?? "";
   if (baseName === "dockerfile") return "dockerfile";
   if (baseName === "makefile" || baseName === "gnumakefile") return "makefile";
@@ -125,8 +127,8 @@ export function CodePreview({
   const { t } = useLanguage();
   const [copied, setCopied] = useState(false);
   const [mdMode, setMdMode] = useState<"source" | "rendered">("rendered");
-  const codeRef = useRef<HTMLElement>(null);
-  const mdRef = useRef<HTMLDivElement>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [wordWrap, setWordWrap] = useState(false);
 
   const lang = detectLanguage(fileName);
   const isMarkdown = lang === "markdown";
@@ -134,6 +136,24 @@ export function CodePreview({
   const displayContent = isTruncated
     ? content.slice(0, maxBytes)
     : content;
+
+  // ── Close expanded on Escape ───────────────────────────────────────────────
+  useEffect(() => {
+    if (!expanded) return;
+    const h = (e: KeyboardEvent) => { if (e.key === "Escape") setExpanded(false); };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [expanded]);
+
+  // ── Lock body scroll when expanded ─────────────────────────────────────────
+  useEffect(() => {
+    if (expanded) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [expanded]);
 
   // Syntax-highlighted HTML with line wrapping
   const highlightedHtml = useMemo(() => {
@@ -181,29 +201,14 @@ export function CodePreview({
     }) as string;
   }, [displayContent, isMarkdown]);
 
-  // Set highlighted HTML
-  useEffect(() => {
-    if (codeRef.current && (!isMarkdown || mdMode === "source")) {
-      codeRef.current.innerHTML = highlightedHtml;
-    }
-  }, [highlightedHtml, isMarkdown, mdMode]);
-
-  // Set rendered Markdown HTML
-  useEffect(() => {
-    if (mdRef.current && isMarkdown && mdMode === "rendered") {
-      mdRef.current.innerHTML = renderedMarkdown;
-    }
-  }, [renderedMarkdown, isMarkdown, mdMode]);
-
   const lineCount = displayContent.split("\n").length;
 
-  async function handleCopy() {
+  const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(content);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback
       const ta = document.createElement("textarea");
       ta.value = content;
       ta.style.position = "fixed";
@@ -215,75 +220,217 @@ export function CodePreview({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
-  }
+  }, [content]);
 
-  return (
-    <div className="code-preview anim-scale-in">
-      {/* Header bar */}
-      <div className="code-preview-header">
-        <div className="code-preview-header-left">
-          <Code2 size={14} className="text-[var(--accent)] shrink-0" />
-          {lang && (
-            <span className="code-preview-lang-badge">
-              {languageLabel(lang)}
-            </span>
-          )}
-          <span className="code-preview-meta">
-            {formatBytes(fileSize)} · {t("codePreviewLines", { count: lineCount })}
+  const wrapClass = wordWrap ? "cp-wrap" : "";
+  const expandedClass = expanded ? "cp-expanded" : "";
+
+  // ── Shared header bar ──────────────────────────────────────────────────────
+  const headerBar = (
+    <div className="code-preview-header">
+      <div className="code-preview-header-left">
+        <Code2 size={14} className="text-[var(--accent)] shrink-0" />
+        <span className="code-preview-filename" title={fileName}>{fileName}</span>
+        {lang && (
+          <span className="code-preview-lang-badge">
+            {languageLabel(lang)}
           </span>
-        </div>
-        <div className="code-preview-header-right">
-          {/* Markdown source/rendered toggle */}
-          {isMarkdown && (
-            <div className="code-preview-toggle">
-              <button
-                type="button"
-                className={mdMode === "source" ? "active" : ""}
-                onClick={() => setMdMode("source")}
-              >
-                {t("codePreviewRawSource")}
-              </button>
-              <button
-                type="button"
-                className={mdMode === "rendered" ? "active" : ""}
-                onClick={() => setMdMode("rendered")}
-              >
-                {t("codePreviewRendered")}
-              </button>
-            </div>
-          )}
+        )}
+        <span className="code-preview-meta">
+          {formatBytes(fileSize)} · {t("codePreviewLines", { count: lineCount })}
+        </span>
+      </div>
+      <div className="code-preview-header-right">
+        {/* Markdown source/rendered toggle */}
+        {isMarkdown && (
+          <div className="code-preview-toggle">
+            <button
+              type="button"
+              className={mdMode === "source" ? "active" : ""}
+              onClick={() => setMdMode("source")}
+            >
+              {t("codePreviewRawSource")}
+            </button>
+            <button
+              type="button"
+              className={mdMode === "rendered" ? "active" : ""}
+              onClick={() => setMdMode("rendered")}
+            >
+              {t("codePreviewRendered")}
+            </button>
+          </div>
+        )}
+        {/* Word wrap toggle (only for code, not rendered markdown) */}
+        {(!isMarkdown || mdMode === "source") && (
           <button
             type="button"
-            className={`code-preview-copy-btn ${copied ? "copied" : ""}`}
-            onClick={handleCopy}
+            className={`code-preview-icon-btn ${wordWrap ? "active" : ""}`}
+            onClick={() => setWordWrap((w) => !w)}
+            title={t("codePreviewWordWrap")}
           >
-            {copied ? <Check size={12} /> : <Copy size={12} />}
-            {copied ? t("codePreviewCopied") : t("codePreviewCopy")}
+            <WrapText size={14} />
           </button>
-        </div>
+        )}
+        {/* Copy */}
+        <button
+          type="button"
+          className={`code-preview-copy-btn ${copied ? "copied" : ""}`}
+          onClick={handleCopy}
+        >
+          {copied ? <Check size={12} /> : <Copy size={12} />}
+          {copied ? t("codePreviewCopied") : t("codePreviewCopy")}
+        </button>
+        {/* Expand / Collapse */}
+        <button
+          type="button"
+          className="code-preview-icon-btn"
+          onClick={() => setExpanded((e) => !e)}
+          title={expanded ? t("codePreviewCollapse") : t("codePreviewExpand")}
+        >
+          {expanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+        </button>
       </div>
+    </div>
+  );
 
-      {/* Code body */}
+  // ── Shared body content ────────────────────────────────────────────────────
+  const bodyContent = (
+    <>
       {(!isMarkdown || mdMode === "source") && (
-        <div className="code-preview-body preview-scroll">
+        <div className={`code-preview-body preview-scroll ${wrapClass}`}>
           <pre>
-            <code ref={codeRef} className={lang ? `hljs language-${lang}` : "hljs"} />
+            <code
+              className={lang ? `hljs language-${lang}` : "hljs"}
+              dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+            />
           </pre>
         </div>
       )}
 
-      {/* Markdown rendered view */}
       {isMarkdown && mdMode === "rendered" && (
-        <div ref={mdRef} className="md-rendered preview-scroll" />
+        <div
+          className="md-rendered preview-scroll"
+          dangerouslySetInnerHTML={{ __html: renderedMarkdown }}
+        />
       )}
 
-      {/* Truncation notice */}
       {isTruncated && (
         <div className="code-preview-truncated">
           <AlertTriangle size={14} />
           {t("codePreviewTruncated", { size: formatBytes(maxBytes) })}
         </div>
       )}
-    </div>
+    </>
+  );
+
+  // ── Rendering View ─────────────────────────────────────────────────────────
+  return (
+    <>
+      {/* Inline view */}
+      <div className={`code-preview anim-scale-in ${expandedClass}`}>
+        {headerBar}
+        {bodyContent}
+      </div>
+
+      {/* Expanded fullscreen overlay */}
+      {expanded && (
+        <div
+          className="code-preview-overlay anim-fade-in"
+          onClick={(e) => { if (e.target === e.currentTarget) setExpanded(false); }}
+        >
+          <div className="code-preview-fullscreen anim-scale-in">
+            {/* Fullscreen header */}
+            <div className="code-preview-fullscreen-topbar">
+              <div className="code-preview-header-left">
+                <Code2 size={16} className="text-[var(--accent)] shrink-0" />
+                <span className="code-preview-filename" title={fileName}>{fileName}</span>
+                {lang && (
+                  <span className="code-preview-lang-badge">
+                    {languageLabel(lang)}
+                  </span>
+                )}
+                <span className="code-preview-meta">
+                  {formatBytes(fileSize)} · {t("codePreviewLines", { count: lineCount })}
+                </span>
+              </div>
+              <div className="code-preview-header-right">
+                {isMarkdown && (
+                  <div className="code-preview-toggle">
+                    <button
+                      type="button"
+                      className={mdMode === "source" ? "active" : ""}
+                      onClick={() => setMdMode("source")}
+                    >
+                      {t("codePreviewRawSource")}
+                    </button>
+                    <button
+                      type="button"
+                      className={mdMode === "rendered" ? "active" : ""}
+                      onClick={() => setMdMode("rendered")}
+                    >
+                      {t("codePreviewRendered")}
+                    </button>
+                  </div>
+                )}
+                {(!isMarkdown || mdMode === "source") && (
+                  <button
+                    type="button"
+                    className={`code-preview-icon-btn ${wordWrap ? "active" : ""}`}
+                    onClick={() => setWordWrap((w) => !w)}
+                    title={t("codePreviewWordWrap")}
+                  >
+                    <WrapText size={14} />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className={`code-preview-copy-btn ${copied ? "copied" : ""}`}
+                  onClick={handleCopy}
+                >
+                  {copied ? <Check size={14} /> : <Copy size={14} />}
+                  {copied ? t("codePreviewCopied") : t("codePreviewCopy")}
+                </button>
+                <button
+                  type="button"
+                  className="code-preview-icon-btn"
+                  onClick={() => setExpanded(false)}
+                  title={t("codePreviewCollapse")}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Fullscreen body */}
+            <div className={`code-preview-fullscreen-body ${wrapClass}`}>
+              {(!isMarkdown || mdMode === "source") && (
+                <div className="code-preview-body preview-scroll cp-fullscreen-scroll">
+                  <pre>
+                    <code
+                      className={lang ? `hljs language-${lang}` : "hljs"}
+                      dangerouslySetInnerHTML={{ __html: highlightedHtml }}
+                    />
+                  </pre>
+                </div>
+              )}
+
+              {isMarkdown && mdMode === "rendered" && (
+                <div
+                  className="md-rendered preview-scroll cp-fullscreen-scroll"
+                  dangerouslySetInnerHTML={{ __html: renderedMarkdown }}
+                />
+              )}
+
+              {isTruncated && (
+                <div className="code-preview-truncated">
+                  <AlertTriangle size={14} />
+                  {t("codePreviewTruncated", { size: formatBytes(maxBytes) })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

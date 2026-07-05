@@ -265,7 +265,7 @@ export function DocumentViewDialog({
       role="dialog" aria-modal="true"
       onClick={(e) => { if (e.target === e.currentTarget && !busy) onClose(); }}
     >
-      <div className="anim-scale-in w-full max-w-2xl rounded-lg border border-[var(--border)] bg-[var(--bg-2)] shadow-2xl my-auto overflow-hidden">
+      <div className={`anim-scale-in w-full ${codeContent !== null ? "max-w-4xl" : "max-w-2xl"} rounded-lg border border-[var(--border)] bg-[var(--bg-2)] shadow-2xl my-auto overflow-hidden transition-all duration-300`}>
         
         {/* Header decoration (colored top line if category exists) */}
         {document.category && (
